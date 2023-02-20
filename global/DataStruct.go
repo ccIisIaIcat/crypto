@@ -19,3 +19,21 @@ type TickInfo struct {
 	Ts_FundingRate     int     // 资金费率最后更新时间
 	TS_NextFundingRate int
 }
+
+type Config struct {
+	MysqlInfo map[string]ConfigMysql
+	UserInfo  map[string]ConfigUser
+}
+
+type ConfigMysql struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+}
+
+type ConfigUser struct {
+	Apikey     string
+	Secretkey  string
+	Passphrase string
+}

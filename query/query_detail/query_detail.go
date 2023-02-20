@@ -2,7 +2,6 @@ package query_detail
 
 import (
 	"encoding/json"
-	"fmt"
 	"global"
 	"log"
 	"strconv"
@@ -53,7 +52,6 @@ func (Q *QueryDetail) update_tick_info(temp_json []byte) {
 		log.Println("json解析错误", err)
 		return
 	}
-	fmt.Println(temp)
 	channel_info := temp["arg"].(map[string](interface{}))["channel"].(string)
 	insid_info := temp["arg"].(map[string](interface{}))["instId"].(string)
 	if temp["event"] != nil {
@@ -83,7 +81,6 @@ func (Q *QueryDetail) update_tick_info(temp_json []byte) {
 		Q.local_insid_info[insid_info].NextFundingRate = nextFundingRate
 		Q.local_insid_info[insid_info].TS_NextFundingRate = nextFundingTime
 	}
-	fmt.Println(len(Q.Tick_info_chan))
 	Q.Tick_info_chan <- Q.local_insid_info[insid_info]
 }
 
