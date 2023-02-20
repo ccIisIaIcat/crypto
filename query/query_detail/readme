@@ -1,0 +1,5 @@
+嫁接:
+    websocketlocal模组
+    global模组
+    
+根基提供的Insid获取限价、持仓总量、资金费率信息(不断更新对应insid的info结构体，每有更新向对应chan中输出)
