@@ -1,7 +1,9 @@
 package websocketlocal
 
 import (
+	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -18,6 +20,7 @@ type WebSocketLocal struct {
 	conn         *websocket.Conn // websocket 连接对象
 	subcribeInfo []string        // 正在订阅的服务，用于断线重连恢复
 	temp_chan    chan []byte
+	check_map    sync.Map
 }
 
 // 生成一个websocket对象
@@ -28,6 +31,8 @@ func GenWebSocket(address string, timecounter int) *WebSocketLocal {
 	ws.subcribeInfo = make([]string, 0)
 	ws.InfoChan = make(chan []byte, 100)
 	ws.temp_chan = make(chan []byte, 1000)
+	ws.check_map = sync.Map{}
+	ws.check_map.Store("check", true)
 	// 尝试握手(若失败，重复，重复100次失败报错)
 	dialer := websocket.Dialer{}
 	var err error
@@ -63,12 +68,19 @@ func (W *WebSocketLocal) Submit(SubInfo []byte, save bool) {
 // 一个用于预处理的私有函数
 func (W *WebSocketLocal) preprocess() {
 	for {
+		check, _ := W.check_map.Load("check")
+		for !check.(bool) {
+			time.Sleep(time.Second)
+			fmt.Println(time.Now())
+			check, _ = W.check_map.Load("check")
+		}
 		messageType, info, err := W.conn.ReadMessage()
 		if err != nil || messageType == -1 {
 			log.Println("err while get respon", err)
 			W.restartWebsocket()
+		} else {
+			W.temp_chan <- info
 		}
-		W.temp_chan <- info
 	}
 }
 
@@ -76,6 +88,12 @@ func (W *WebSocketLocal) preprocess() {
 func (W *WebSocketLocal) StartGather() {
 	go W.preprocess()
 	for {
+		check, _ := W.check_map.Load("check")
+		for !check.(bool) {
+			time.Sleep(time.Second)
+			fmt.Println(time.Now())
+			check, _ = W.check_map.Load("check")
+		}
 		select {
 		case <-time.After(5 * time.Second):
 			W.Submit([]byte("ping"), false)
@@ -101,6 +119,7 @@ func (W *WebSocketLocal) StartGather() {
 
 // 一个用于断线重连的私有函数
 func (W *WebSocketLocal) restartWebsocket() {
+	W.check_map.Store("check", false)
 	log.Println("restarting")
 	// 尝试握手(若失败，重复,间隔3秒，重复400次失败报错)
 	dialer := websocket.Dialer{}
@@ -121,6 +140,7 @@ func (W *WebSocketLocal) restartWebsocket() {
 	for i := 0; i < len(W.subcribeInfo); i++ {
 		W.Submit([]byte(W.subcribeInfo[i]), false)
 	}
+	W.check_map.Store("check", true)
 
 }
 
