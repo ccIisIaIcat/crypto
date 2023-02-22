@@ -92,7 +92,6 @@ func (Q *QueryDetail) Start() {
 		info := <-Q.local_ws.InfoChan
 		Q.update_tick_info(info)
 	}
-
 }
 
 // func main() {

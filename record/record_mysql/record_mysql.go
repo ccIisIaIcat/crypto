@@ -43,6 +43,7 @@ func (M *MysqlServer) Create_stmt(label string, sql string) {
 	}
 	stmt, err := M.db.Prepare(sql)
 	if err != nil {
+		log.Println(err)
 		panic("stmt err")
 	} else {
 		M.Stmt_map[label] = stmt

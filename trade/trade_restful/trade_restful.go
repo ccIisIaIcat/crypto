@@ -99,7 +99,7 @@ func (T *TradeRestful) ChangeLeverage(InsId string, leverage string, mgnMode str
 }
 
 func main() {
-	sample_json := `{"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"sell","ordType":"market","sz":"1"}`
+	sample_json := `{"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}`
 	conf := global.GetConfig("../../conf/conf.ini")
 	tr := GenTradeRestful(conf.UserInfo["1"])
 	lalala := tr.ChangeLeverage("ETH-USDT-SWAP", "5", "cross")
