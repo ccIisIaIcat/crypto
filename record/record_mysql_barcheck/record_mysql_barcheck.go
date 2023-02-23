@@ -2,7 +2,6 @@ package record_mysql_barcheck
 
 import (
 	"database/sql"
-	"fmt"
 	"global"
 	"log"
 	"strconv"
@@ -62,7 +61,6 @@ func (B *BarCheck) CheckBarLose(ts_start int, ts_end int, insid string, check_su
 	row := B.db.QueryRow("select count(*) from `" + insid + "` where Ts_open > " + t1 + " and Ts_open <" + t2 + ";")
 	var temp int
 	row.Scan(&temp)
-	fmt.Println(temp)
 	if temp == check_sum {
 		return true
 	} else {
@@ -71,27 +69,33 @@ func (B *BarCheck) CheckBarLose(ts_start int, ts_end int, insid string, check_su
 
 }
 
-// 在找到缺失的条和可以填充的条后，进行填充,注明是从okex获取的还是从币安获取的，应为币安不填充交易量
-func (B *BarCheck) InsertMissing(barinfo global.BarInfo, exchange string) {
-	sql := ""
-	if exchange == "okex" {
-		strconv.Itoa(barinfo.Ts_open)
-		strconv.FormatFloat(barinfo.Open_price, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.High_price, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.Low_price, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.Close_price, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.Vol, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.VolCcy, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.VolCcyQuote, 'f', 1, 64)
-		sql = "insert into `" + barinfo.Insid + "`(Insid,Ts_open,Open_price,High_price,Low_price,Close_price,Vol,VolCcy,VolCcyQuote) values(" + barinfo.Insid + strconv.Itoa(barinfo.Ts_open) + strconv.FormatFloat(barinfo.Open_price, 'f', 1, 64) + strconv.FormatFloat(barinfo.High_price, 'f', 1, 64) + strconv.FormatFloat(barinfo.Low_price, 'f', 1, 64) + strconv.FormatFloat(barinfo.Close_price, 'f', 1, 64) + strconv.FormatFloat(barinfo.Vol, 'f', 1, 64) + strconv.FormatFloat(barinfo.VolCcy, 'f', 1, 64) + strconv.FormatFloat(barinfo.VolCcyQuote, 'f', 1, 64) + ");"
-	} else if exchange == "bianace" {
-		strconv.Itoa(barinfo.Ts_open)
-		strconv.FormatFloat(barinfo.Open_price, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.High_price, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.Low_price, 'f', 1, 64)
-		strconv.FormatFloat(barinfo.Close_price, 'f', 1, 64)
-		sql = "insert into `" + barinfo.Insid + "`(Insid,Ts_open,Open_price,High_price,Low_price,Close_price) values(" + barinfo.Insid + strconv.Itoa(barinfo.Ts_open) + strconv.FormatFloat(barinfo.Open_price, 'f', 1, 64) + strconv.FormatFloat(barinfo.High_price, 'f', 1, 64) + strconv.FormatFloat(barinfo.Low_price, 'f', 1, 64) + strconv.FormatFloat(barinfo.Close_price, 'f', 1, 64) + ");"
+// 给定首尾时间戳和insid,查找丢失的包
+func (B *BarCheck) FindMissing(ts_start int, ts_end int, insid string) []int {
+	t1 := strconv.Itoa(ts_start)
+	t2 := strconv.Itoa(ts_end)
+	tool_map := make(map[int]bool, 0)
+	temp_ts := ts_start
+	for temp_ts < ts_end {
+		tool_map[temp_ts] = false
+		temp_ts += 60 * 1000
 	}
+	rows, _ := B.db.Query("select Ts_open from `" + insid + "` where Ts_open > " + t1 + " and Ts_open <" + t2 + ";")
+	var temp int
+	for rows.Next() {
+		rows.Scan(&temp)
+		tool_map[temp] = true
+	}
+	answer := make([]int, 0)
+	for k, v := range tool_map {
+		if !v {
+			answer = append(answer, k)
+		}
+	}
+	return answer
+}
+
+// 在找到缺失的条和可以填充的条后，进行填充,注明是从okex获取的还是从币安获取的，应为币安不填充交易量
+func (B *BarCheck) InsertMissing(sql string) {
 	if sql != "" {
 		_, err := B.db.Exec(sql)
 		if err != nil {
@@ -99,6 +103,10 @@ func (B *BarCheck) InsertMissing(barinfo global.BarInfo, exchange string) {
 		}
 	}
 
+}
+
+func (B *BarCheck) Close() {
+	B.db.Close()
 }
 
 // func main() {
