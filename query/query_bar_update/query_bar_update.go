@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // 指定insid，和时间节点，返回时间节点二十四小时内的bar数据(从okex获取)
@@ -18,16 +19,14 @@ func GenBarListOkex(insid string, ts int) map[string]([]interface{}) {
 		fmt.Println(err)
 	}
 	temp_json, _ := io.ReadAll(data.Body)
-	// fmt.Println(insid)
-	// fmt.Println("lll", string(temp_json))
 	var temp map[string](interface{})
 	json.Unmarshal(temp_json, &temp)
 	// fmt.Println(temp["data"].([]interface{}))
 	info_list := temp["data"].([]interface{})
 	for i := 0; i < len(info_list); i++ {
-		// tt, _ := strconv.Atoi(info_list[i].([]interface{})[0].(string))
-		// tm := time.Unix(int64(tt/1000), 0)
-		// fmt.Println(tm)
+		tt, _ := strconv.Atoi(info_list[i].([]interface{})[0].(string))
+		tm := time.Unix(int64(tt/1000), 0)
+		fmt.Println(tm)
 		answer[info_list[i].([]interface{})[0].(string)] = info_list[i].([]interface{})[1:]
 	}
 	return answer
@@ -47,8 +46,8 @@ func GenBarListBianace(insid string, ts int) map[string]([]interface{}) {
 	json.Unmarshal(temp_json, &temp)
 	for i := 0; i < len(temp); i++ {
 		temp_list := temp[i].([]interface{})
-		// tm := time.Unix(int64(temp_list[0].(float64)/1000), 0)
-		// fmt.Println(tm)
+		tm := time.Unix(int64(temp_list[0].(float64)/1000), 0)
+		fmt.Println(tm)
 		answer[strconv.Itoa(int(temp_list[0].(float64)))] = append(temp_list[1:6], temp_list[7:9]...)
 	}
 	return answer

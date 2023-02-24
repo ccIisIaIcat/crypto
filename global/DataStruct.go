@@ -31,6 +31,10 @@ type BarInfo struct {
 	Vol         float64 // 交易量，以张为单位
 	VolCcy      float64 // 交易量，以币为单位
 	VolCcyQuote float64 // 交易量，以计价货币为单位
+	// 该bar下最新持仓量信息
+	Oi    float64
+	OiCcy float64
+	Ts_oi int
 	// 如果是SWAP，还保存资金费率信息
 	FundingRate        float64 // 当前资金费率
 	NextFundingRate    float64 // 下一期预测资金费率

@@ -5,6 +5,7 @@ NET交易策略
 """
 
 from datetime import time, datetime
+import vnpy.trader.app
 from vnpy.trader.app.ctaStrategy.ctaTemplate import CtaTemplate, BarGenerator, ArrayManager
 from mailAlert import send_gmail
 from vnpy.trader.language.chinese.constant import *

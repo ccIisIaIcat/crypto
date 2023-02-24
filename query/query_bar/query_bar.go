@@ -35,7 +35,7 @@ func (Q *QueryBar) init() {
 
 }
 
-// 对对应信息进行订阅
+// 对对应信息进行订阅(订阅bar信息)
 func (Q *QueryBar) submit_bar() {
 	for i := 0; i < len(Q.InsId_list); i++ {
 		// 订阅bar信息
@@ -43,11 +43,19 @@ func (Q *QueryBar) submit_bar() {
 	}
 }
 
-// 对对应信息进行订阅
+// 对对应信息进行订阅(订阅资金费率信息)
 func (Q *QueryBar) submit_fundingrate() {
 	for i := 0; i < len(Q.InsId_list); i++ {
 		// 订阅资金费率信息
 		Q.local_ws.Submit([]byte(`{"op": "subscribe","args": [{"channel": "funding-rate","instId": "`+Q.InsId_list[i]+`"}]}`), true)
+	}
+}
+
+// 对对应信息进行订阅(订阅持仓量信息)
+func (Q *QueryBar) submit_openinterest() {
+	for i := 0; i < len(Q.InsId_list); i++ {
+		// 订阅资金费率信息
+		Q.local_ws.Submit([]byte(`{"op": "subscribe","args": [{"channel": "open-interest","instId": "`+Q.InsId_list[i]+`"}]}`), true)
 	}
 }
 
@@ -94,6 +102,13 @@ func (Q *QueryBar) update_tick_info(temp_json []byte) {
 		Q.local_insid_info[insid_info].Ts_FundingRate = ts_fundingrate
 		Q.local_insid_info[insid_info].NextFundingRate = nextFundingRate
 		Q.local_insid_info[insid_info].TS_NextFundingRate = nextFundingTime
+	} else if channel_info == "open-interest" {
+		oi, _ := strconv.ParseFloat(temp["data"].([]interface{})[0].(map[string]interface{})["oi"].(string), 64)
+		oiccy, _ := strconv.ParseFloat(temp["data"].([]interface{})[0].(map[string]interface{})["oiCcy"].(string), 64)
+		ts_oi, _ := strconv.Atoi(temp["data"].([]interface{})[0].(map[string]interface{})["ts"].(string))
+		Q.local_insid_info[insid_info].Oi = oi
+		Q.local_insid_info[insid_info].OiCcy = oiccy
+		Q.local_insid_info[insid_info].Ts_oi = ts_oi
 	}
 
 }
@@ -104,6 +119,7 @@ func (Q *QueryBar) Start() {
 		Q.submit_fundingrate()
 	}
 	Q.submit_bar()
+	Q.submit_openinterest()
 	go Q.local_ws.StartGather()
 	for {
 		info := <-Q.local_ws.InfoChan

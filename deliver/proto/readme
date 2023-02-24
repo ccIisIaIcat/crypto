@@ -1,0 +1,9 @@
+用于生成相关的配置文件
+
+当更新proto文件时，在该目录终端下执行以下代码用于更新生成文件：
+
+protoc --go_out=. deliver.proto    
+
+protoc --go-grpc_out=. deliver.proto 
+
+python -m grpc_tools.protoc --python_out=. --grpc_python_out=. -I. deliver.proto

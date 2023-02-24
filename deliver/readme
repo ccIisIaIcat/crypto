@@ -1,0 +1,14 @@
+用于python和golang的信息交互，取代原来的pyconnect包
+
+交互基于grpc协议，目前定义四种数据类型
+
+Barinfo: 实时的bar数据
+Tickinfo: 实时的tick数据
+Order: 报单
+Response: 回执消息
+
+在go端和python端分别有一个服务端和一个客户端，交互文件基于proto
+
+go端端口: 3901
+python端端口: 3902
+

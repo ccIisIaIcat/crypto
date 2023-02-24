@@ -1,0 +1,83 @@
+syntax = "proto3";// 协议为proto3
+
+option go_package = ".;deliver";
+
+
+// 定义发送请求信息
+message SimpleRequest{
+    // 定义发送的参数
+    // 参数类型 参数名 标识号(不可重复)
+    string data = 1;
+}
+
+message BarData {
+    string Insid = 1;
+    int64 Ts_open = 2;
+    float Open_price = 3;
+    float High_price = 4;
+    float Low_price = 5;
+    float Close_price = 6;
+    float Vol = 7;
+    float VolCcy = 8;
+    float VolCcyQuote = 9;
+    float Oi = 10;
+    float OiCcy = 11;
+    int64 Ts_oi = 12;
+    float FundingRate = 13;
+    float NextFundingRate = 14;
+    int64 Ts_FundingRate = 15;
+    int64 TS_NextFundingRate= 16;
+}
+
+message TickData{
+    string Insid = 1;
+    int64 Ts_Price = 2;
+    float Ask1_price = 3;
+    float Bid1_price = 4;
+    float Ask1_volumn = 5;
+    float Bid1_volumn = 6;
+}
+
+message Response{
+    string response_me = 1;
+}
+
+message Order{
+    string insId = 1;   // 产品ID   必填
+    string tdMode = 2;  // 交易模式 必填
+    string ccy = 3; // 保证金币种 非必填
+    string clOrdId =4; // 客户自定义订单ID 非必填
+    string tag =5; // 订单标签 非必填
+    string side = 6; // 订单方向 必填 buy：买， sell：卖
+    string posSide =7; // 持仓方向 在双向持仓模式下必填，且仅可选择 long 或 short。 仅适用交割、永续。
+    string ordType =8; // 订单类型 必填 // market：市价单，limit：限价单，post_only：只做maker单，fok：全部成交或立即取消，ioc：立即成交并取消剩余，optimal_limit_ioc：市价委托立即成交并取消剩余（仅适用交割、永续）
+    string sz = 9; // 委托数量 必填
+    string px = 10; // 委托价格，仅适用于limit、post_only、fok、ioc类型的订单 非必填
+    bool reduceOnly = 11; // 是否只减仓，true 或 false，默认false 非必填
+    string tgtCcy = 12; // 市价单委托数量sz的单位，仅适用于币币市价订单 非必填
+    bool banAmend = 13; // 是否禁止币币市价改单，true 或 false，默认false 非必填
+    string tpTriggerPx = 14; // 止盈触发价，如果填写此参数，必须填写 止盈委托价 非必填
+    string tpOrdPx = 15; // 止盈委托价，如果填写此参数，必须填写 止盈触发价 非必填（PS:委托价格为-1时，执行市价止盈）
+    string slTriggerPx	= 16;	// 止损触发价，如果填写此参数，必须填写 止损委托价 非必填
+    string slOrdPx	= 17;	// 止损委托价，如果填写此参数，必须填写 止损触发价 非必填 （PS:委托价格为-1时，执行市价止损）
+    string tpTriggerPxType = 18; // 止盈触发类型 last：最新价格 index：指数价格 mark：标记价格 默认为last
+    string slTriggerPxType = 19; // 止损触发价类型 last：最新价格 index：指数价格 mark：标记价格 默认为last
+    string quickMgnType = 20; // 一键借币类型，仅适用于杠杆逐仓的一键借币模式：manual：手动，auto_borrow： 自动借币，auto_repay： 自动还币
+}
+
+
+
+// 定义bar消息接收对象
+service BarDataReceiver{
+    rpc BarDataReceiver(BarData) returns (Response){};
+}
+
+// 定义tick消息接收对象
+service TickDataReceiver{
+    rpc TickDataReceiver(TickData) returns (Response){};
+}
+
+service OrerReceiver{
+    rpc OrerRReceiver(Order) returns (Response){};
+}
+
