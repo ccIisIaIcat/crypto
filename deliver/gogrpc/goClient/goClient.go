@@ -2,7 +2,6 @@ package goClient
 
 import (
 	"log"
-	"time"
 
 	deliver "godeliver"
 
@@ -18,8 +17,8 @@ import (
 // 用于向python端发送数据
 type InfoDeliver struct {
 	// pubilc
-	BarChan  chan global.BarInfo
-	TickChan chan global.TickInfo
+	BarChan  chan *global.BarInfo
+	TickChan chan *global.TickInfo
 	// privte
 	barsignal  bool
 	ticksignal bool
@@ -34,13 +33,13 @@ func GenInfoDeliver() *InfoDeliver {
 	return ifd
 }
 
-func (I *InfoDeliver) ConnectBar(barchan chan global.BarInfo, port string) {
+func (I *InfoDeliver) ConnectBar(barchan chan *global.BarInfo, port string) {
 	I.barsignal = true
 	I.BarChan = barchan
 	I.barport = port
 }
 
-func (I *InfoDeliver) ConnectTick(tickchan chan global.TickInfo, port string) {
+func (I *InfoDeliver) ConnectTick(tickchan chan *global.TickInfo, port string) {
 	I.ticksignal = true
 	I.TickChan = tickchan
 	I.tickport = port
@@ -56,7 +55,8 @@ func (I *InfoDeliver) startbar() {
 	// 初始化BarDataReceiver服务客户端
 	c := deliver.NewBarDataReceiverClient(conn)
 	// 初始化上下文，设置请求超时时间
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Second*100)
+	ctx, cancel := context.WithCancel(context.Background())
 	// 延迟关闭请求会话
 	defer cancel()
 	for {
@@ -81,7 +81,8 @@ func (I *InfoDeliver) starttick() {
 	// 初始化BarDataReceiver服务客户端
 	c := deliver.NewTickDataReceiverClient(conn)
 	// 初始化上下文，设置请求超时时间
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+	// ctx, cancel := context.WithTimeout(context.Background(), time.Second*100)
+	ctx, cancel := context.WithCancel(context.Background())
 	// 延迟关闭请求会话
 	defer cancel()
 	for {
@@ -105,7 +106,7 @@ func (I *InfoDeliver) Start() {
 	}
 }
 
-func (I *InfoDeliver) CopyBar(bargobal global.BarInfo) *deliver.BarData {
+func (I *InfoDeliver) CopyBar(bargobal *global.BarInfo) *deliver.BarData {
 	temp := &deliver.BarData{}
 	temp.Insid = bargobal.Insid
 	temp.TsOpen = int64(bargobal.Ts_open)
@@ -126,7 +127,7 @@ func (I *InfoDeliver) CopyBar(bargobal global.BarInfo) *deliver.BarData {
 	return temp
 }
 
-func (I *InfoDeliver) CopyTick(tickdata global.TickInfo) *deliver.TickData {
+func (I *InfoDeliver) CopyTick(tickdata *global.TickInfo) *deliver.TickData {
 	temp := &deliver.TickData{}
 	temp.Insid = tickdata.Insid
 	temp.Ts_Price = int64(tickdata.Ts_Price)

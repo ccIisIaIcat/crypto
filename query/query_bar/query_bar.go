@@ -32,7 +32,6 @@ func (Q *QueryBar) init() {
 	}
 	Q.Bar_info_chan = make(chan *global.BarInfo, 1000)
 	Q.local_ws = websocketlocal.GenWebSocket("wss://ws.okx.com:8443/ws/v5/public", 10)
-
 }
 
 // 对对应信息进行订阅(订阅bar信息)
