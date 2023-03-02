@@ -1,0 +1,138 @@
+package main
+
+import (
+	"fmt"
+	"global"
+	"goClient"
+	deliver "godeliver"
+	"log"
+	"query_bar_custom"
+	"query_tick"
+	"reflect"
+	"strings"
+	"sync"
+	"time"
+	"trade_restful"
+)
+
+func make_order(od *deliver.Order) {
+	tradeinfo := global.GetConfig("../../conf/conf.ini")
+	gtr := trade_restful.GenTradeRestful(tradeinfo.UserInfo["1"])
+	res := gtr.SendOrder(genorder(od))
+	log.Println(res)
+}
+
+func genorder(od *deliver.Order) string {
+	fmt.Println(od)
+	answer := `{"instId":"` + od.InsId + `"`
+	// temp_list := []string{"insId", "tdMode", "ccy", "clOrdId", "tag", "side", "posSide", "ordType", "sz", "px", "reduceOnly", "tgtCcy", "banAmend", "tpTriggerPx", "tpOrdPx", "slTriggerPx", "slOrdPx", "tpTriggerPxType", "slTriggerPxType", "quickMgnType", "brokerID"}
+	hofvalue := reflect.ValueOf(*od)
+	tp := reflect.TypeOf(*od)
+	for i := 0; i < tp.NumField(); i++ {
+		temp_name := strings.ToLower(string(tp.Field(i).Name[0])) + string(tp.Field(i).Name[1:])
+		if tp.Field(i).Name == "brokerID" {
+			continue
+		} else if tp.Field(i).Name == "reduceOnly" || tp.Field(i).Name == "banAmend" {
+			answer += `,"` + tp.Field(i).Name + `":` + hofvalue.Field(i).Interface().(string) + ``
+			continue
+		} else if temp_name == "tdMode" || temp_name == "ccy" || temp_name == "clOrdId" || temp_name == "tag" || temp_name == "side" || temp_name == "posSide" || temp_name == "ordType" || temp_name == "sz" || temp_name == "px" || temp_name == "tgtCcy" || temp_name == "tpTriggerPx" || temp_name == "tpOrdPx" || temp_name == "slTriggerPx" || temp_name == "slOrdPx" || temp_name == "tpTriggerPxType" || temp_name == "slTriggerPxType" || temp_name == "quickMgnType" {
+			if hofvalue.Field(i).Interface().(string) != "" {
+				answer += `,"` + temp_name + `":"` + hofvalue.Field(i).Interface().(string) + `"`
+			}
+		}
+	}
+	answer += `}`
+	fmt.Println(answer)
+	return answer
+}
+
+func Disconnect_judge(gid *goClient.InfoDeliver, tick_websocket *query_tick.QueryTick, bar_websocket *query_bar_custom.QueryBar) {
+	var judge_tick *query_tick.QueryTick
+	var judge_bar *query_bar_custom.QueryBar
+	for {
+		judge, _ := gid.Stop_signal.Load("disconnect")
+		if judge.(bool) {
+			if tick_websocket != judge_tick {
+				tick_websocket.Close()
+			}
+			if bar_websocket != judge_bar {
+				bar_websocket.Close()
+			}
+			break
+		}
+		time.Sleep(time.Second)
+	}
+}
+
+func main() {
+	gfd := goClient.GenInfoDeliver()
+	go gfd.LocalServerListen("4352")
+
+	orderchan := make(chan *deliver.Order, 100)
+	// bar_list := make([]string, 0)
+	tick_list := make([]string, 0)
+	start_signal := sync.Map{}
+	start_signal.Store("start_signal", false)
+
+	go func() {
+		for {
+			select {
+			case temp := <-gfd.Local_server.InfoChan:
+				if temp.InsId == "init" {
+					var qt query_tick.QueryTick
+					var qt3 query_bar_custom.QueryBar
+					if temp.SlTriggerPx != "" {
+						tick_list = strings.Split(temp.SlTriggerPx, " ")
+						port := temp.SlTriggerPxType
+						tick_chan := make(chan *global.TickInfo, 200)
+						qt = query_tick.QueryTick{InsId_list: tick_list, Tick_info_chan: tick_chan}
+						go qt.Start()
+						time.Sleep(time.Second)
+						gfd.ConnectTick(qt.Tick_info_chan, port)
+					}
+					if temp.Side != "" {
+						barhour_list := strings.Split(temp.Side, " ")
+						port3 := temp.Sz
+						timetype := temp.Px
+						bar_chan := make(chan *global.BarInfo, 200)
+						qt3 = query_bar_custom.QueryBar{InsId_list: barhour_list, Bar_info_chan: bar_chan, Custom_type: timetype}
+						go qt3.Start()
+						time.Sleep(time.Second)
+						gfd.ConnectBarCustom(qt3.Bar_info_chan, port3)
+					}
+					start_signal.Store("start_signal", true)
+					go Disconnect_judge(gfd, &qt, &qt3)
+				} else {
+					orderchan <- temp
+					make_order(temp)
+				}
+			case <-time.After(time.Millisecond * 10):
+			}
+		}
+	}()
+
+	go func() {
+		for {
+			check, _ := start_signal.Load("start_signal")
+			if check.(bool) {
+				go gfd.StartDeliver()
+			}
+
+			start_signal.Store("start_signal", false)
+			time.Sleep(time.Second)
+		}
+	}()
+
+	go func() {
+		for {
+			select {
+			case temp := <-orderchan:
+				log.Println(temp)
+			case <-time.After(time.Second * 3):
+			}
+		}
+	}()
+
+	global.NeverStop()
+
+}

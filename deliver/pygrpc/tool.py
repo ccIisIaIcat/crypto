@@ -1,0 +1,227 @@
+import numpy as np
+import pandas as pd
+import datetime
+import deliver_pb2
+import time
+import pymysql
+
+
+
+
+class ordertemplate:
+    insId = ""
+    tdMode = ""
+    ccy = ""
+    clOrdId = ""
+    tag = ""
+    side = ""
+    posSide = ""
+    ordType = ""
+    sz = ""
+    px = ""
+    reduceOnly = "" # bool
+    tgtCcy = ""
+    banAmend = "" # bool
+    tpTriggerPx = ""
+    tpOrdPx = ""
+    slTriggerPx = ""
+    slOrdPx = ""
+    tpTriggerPxType = ""
+    slTriggerPxType = ""
+    quickMgnType = ""
+    brokerID = ""
+    def genOrder(self):
+        temp = deliver_pb2.Order()
+        if self.insId != "":
+            temp.insId = self.insId
+        if self.tdMode != "":
+            temp.tdMode = self.tdMode
+        if self.ccy != "":
+            temp.ccy = self.ccy
+        if self.side != "":
+            temp.side = self.side
+        if self.clOrdId != "":
+            temp.clOrdId = self.clOrdId
+        if self.tag != "":
+            temp.tag = self.tag
+        if self.posSide != "":
+            temp.posSide = self.posSide
+        if self.ordType != "":
+            temp.ordType = self.ordType
+        if self.sz != "":
+            temp.sz = self.sz
+        if self.px != "":
+            temp.px = self.px
+        if self.reduceOnly != "":
+            if self.reduceOnly == "true" or self.reduceOnly == "True":
+                temp.reduceOnly = True
+            else:
+                temp.reduceOnly = False
+        if self.tgtCcy != "":
+            temp.tgtCcy = self.tgtCcy
+        if self.banAmend != "":
+            if self.banAmend == "true" or self.banAmend == "True":
+                temp.banAmend = True
+            else:
+                temp.banAmend = False
+        if self.tpTriggerPx != "":
+            temp.tpTriggerPx = self.tpTriggerPx
+        if self.tpOrdPx != "":
+            temp.tpOrdPx = self.tpOrdPx
+        if self.slTriggerPx != "":
+            temp.slTriggerPx = self.slTriggerPx
+        if self.slOrdPx != "":
+            temp.slOrdPx = self.slOrdPx
+        if self.tpTriggerPxType != "":
+            temp.tpTriggerPxType = self.tpTriggerPxType
+        if self.slTriggerPxType != "":
+            temp.slTriggerPxType = self.slTriggerPxType
+        if self.quickMgnType != "":
+            temp.quickMgnType = self.quickMgnType
+        if self.brokerID != "":
+            temp.brokerID = self.brokerID
+        return temp
+        
+class config:
+    subtype = ""
+    barcustom = ""
+    tickInsid = ""
+    barInsid = ""
+    tickPort = ""
+    barPort = ""
+    accountPort = ""
+    # go端服务端口
+    portsubmit = ""
+    portorder = ""
+    def genLocalSubmit(self):
+        return deliver_pb2.LocalSubmit(subtype=self.subtype,barcustom=self.barcustom,tickInsid=self.tickInsid,barInsid=self.barInsid,tickPort=self.tickPort,barPort=self.barPort,accountPort=self.accountPort)
+    
+class barinfo:
+    InsID = ""
+    TS_open = 0
+    Open_price = 0
+    High_price = 0
+    Low_price = 0
+    Close_price = 0
+    Vol = 0
+    VolCcy = 0
+    VolCcyQuote = 0
+    # Oi = 0
+    # OiCcy = 0
+    # Ts_oi = 0
+    # FundingRate = 0
+    # NextFundingRate = 0
+    # Ts_FundingRate = 0
+    # TS_NextFundingRate = 0
+    def __init__(self,bar_info=""):
+        if bar_info != "":
+            self.InsID =  bar_info.Insid 
+            self.TS_open = bar_info.Ts_open
+            self.Open_price = bar_info.Open_price
+            self.High_price = bar_info.High_price
+            self.Low_price = bar_info.Low_price
+            self.Close_price = bar_info.Close_price
+            self.Vol = bar_info.Vol
+            self.VolCcy = bar_info.VolCcy
+            self.VolCcyQuote = bar_info.VolCcyQuote
+
+class tickinfo:
+    Insid = ""
+    Ts_Price = 0
+    Ask1_price = 0
+    Bid1_price = 0
+    Ask1_volumn = 0
+    Bid1_volumn = 0
+    def __init__(self,tick_info):
+        self.Insid = tick_info.Insid
+        self.Ts_Price = tick_info.Ts_Price
+        self.Ask1_price = tick_info.Ask1_price
+        self.Bid1_price = tick_info.Bid1_price
+        self.Ask1_volumn = tick_info.Ask1_volumn
+        self.Bid1_volumn = tick_info.Bid1_volumn
+
+class BarinfoArray():
+    Array = []
+    df = pd.DataFrame()
+    max_length = 0
+    Symbol = ""
+    def __init__(self,Insid="",max_length=10000):
+        self.Symbol = Insid
+        self.max_length = max_length
+        self.df = pd.DataFrame(columns=["Insid","TS_open","Open_price","High_price","Low_price","Close_price","Vol","VolCcy","VolCcyQuote"])
+
+    def add(self,value:barinfo):
+        if self.Symbol == "":
+            self.Symbol = value.InsID
+        if value.InsID != self.Symbol:
+            print("add in wrong BarinfoArray,try building a new one")
+            return
+        self.Array.append(value)
+        temp_list = [value.InsID,value.TS_open,value.Open_price,value.High_price,value.Low_price,value.Close_price,value.Vol,value.VolCcy,value.VolCcyQuote]
+        self.df.loc[len(self.df)] = temp_list
+        if len(self.Array) > self.max_length:
+            self.Array = self.Array[1:]
+            self.df.drop(0,inplace=True)
+            self.df.reset_index(inplace=True,drop=True)
+    def addnum(self,value):
+        self.df.loc[len(self.df)] = value
+        self.Array.append(barinfo(self.df.loc[len(self.df)-1]))
+
+class TickinfoArray():
+    Array = []
+    df = pd.DataFrame()
+    max_length = 0
+    Symbol = ""
+    def __init__(self,Insid="",max_length=10000):
+        self.Symbol = Insid
+        self.max_length = max_length
+        self.df = pd.DataFrame(columns=["Insid","Ts_Price","Ask1_price","Bid1_price","Ask1_volumn","Bid1_volumn"])
+    
+    def add(self,value:tickinfo):
+        if self.Symbol == "":
+            self.Symbol = value.Insid
+        if value.Insid != self.Symbol:
+            print("add in wrong TickinfoArray,try building a new one")
+            return
+        self.Array.append(value)
+        temp_list = [value.Insid,value.Ts_Price,value.Ask1_price,value.Bid1_price,value.Ask1_volumn,value.Bid1_volumn]
+        self.df.loc[len(self.df)] = temp_list
+        if len(self.Array) > self.max_length:
+            # a1 = datetime.datetime.now()
+            self.Array = self.Array[1:]
+            self.df.drop(0,inplace=True)
+            self.df.reset_index(inplace=True,drop=True)
+            # a2 = datetime.datetime.now()
+            # print((a2-a1).microseconds)
+    def addnum(self,value):
+        self.df.loc[len(self.df)] = value
+        self.Array.append(tickinfo(self.df.loc[len(self.df)-1]))
+
+# 调用该方法时，策略必须声明GenHourBarCustom方法
+def genhourbarCustom(strategy,bardf:BarinfoArray,end_min:str):
+    last_series = bardf.df.iloc[-1]
+    length = 60
+    if time.localtime(float(last_series["Ts_Price"])/1000).tm_min == end_min:
+        if len(bardf.df) >= length:
+            tempbar = barinfo()
+            tempbar.InsID = last_series["Insid"]
+            tempbar.TS_open = bardf.df["Ts_Price"] - length*60*1000
+            tempbar.Open_price = bardf.df["Open_price"][-60:][0]
+            tempbar.High_price = bardf.df["High_price"][-60:].max()
+            tempbar.Low_price = bardf.df["Low_price"][-60:].min()
+            tempbar.Close_price = bardf.df["Close_price"][-1]
+            tempbar.Vol = bardf.df["Vol"][-60:].sum()
+            tempbar.VolCcy = bardf.df["VolCcy"][-60:].sum()
+            tempbar.VolCcyQuote = bardf.df["VolCcyQuote"][-60:].sum()
+        strategy.GenHourBarCustom(tempbar)
+    
+
+# 调用此方法的strategy必须包含UpdateBarCustom方法
+def Load1MBarFromLocalMysql(strategy,user,password,database,length,Insid):
+    con = pymysql.connect(host="127.0.0.1",user=user,password=password,db=database)
+    # 读取sql
+    temp_df = pd.read_sql("select * from +`" + Insid + "`;",con)
+    temp_df = temp_df.sort_
+    
+        
+

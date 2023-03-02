@@ -1,4 +1,4 @@
-package main
+package trade_restful
 
 import (
 	"crypto/hmac"
@@ -98,12 +98,12 @@ func (T *TradeRestful) ChangeLeverage(InsId string, leverage string, mgnMode str
 	return string(body2)
 }
 
-func main() {
-	sample_json := `{"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}`
-	conf := global.GetConfig("../../conf/conf.ini")
-	tr := GenTradeRestful(conf.UserInfo["1"])
-	lalala := tr.ChangeLeverage("ETH-USDT-SWAP", "5", "cross")
-	log.Println(lalala)
-	lala := tr.SendOrder(sample_json)
-	log.Println(lala)
-}
+// func main() {
+// 	sample_json := `{"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}`
+// 	conf := global.GetConfig("../../conf/conf.ini")
+// 	tr := GenTradeRestful(conf.UserInfo["1"])
+// 	lalala := tr.ChangeLeverage("ETH-USDT-SWAP", "5", "cross")
+// 	log.Println(lalala)
+// 	lala := tr.SendOrder(sample_json)
+// 	log.Println(lala)
+// }

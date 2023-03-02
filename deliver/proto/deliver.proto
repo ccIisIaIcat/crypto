@@ -42,6 +42,20 @@ message Response{
     string response_me = 1;
 }
 
+message JsonInfo{
+    string jsoninfo = 1;
+}
+
+message LocalSubmit{
+    string subtype = 1; // 确定该策略服务要订阅的数据类型(bar/tick/order/account/position),多个订阅用空格分开
+    string barcustom = 2;  // 选择自定义bar区间
+    string tickInsid = 3;   // 订阅的tick合约字符串，多个订阅用空格分开
+    string barInsid = 4;    //  订阅的bar合约字符串，多个订阅用空格分开
+    string tickPort = 5;   // tick数据的传送端口
+    string barPort = 6;   // bar数据的传送端口
+    string accountPort = 7; // 账户相关传送接口
+}
+
 message Order{
     string insId = 1;   // 产品ID   必填
     string tdMode = 2;  // 交易模式 必填
@@ -63,13 +77,17 @@ message Order{
     string tpTriggerPxType = 18; // 止盈触发类型 last：最新价格 index：指数价格 mark：标记价格 默认为last
     string slTriggerPxType = 19; // 止损触发价类型 last：最新价格 index：指数价格 mark：标记价格 默认为last
     string quickMgnType = 20; // 一键借币类型，仅适用于杠杆逐仓的一键借币模式：manual：手动，auto_borrow： 自动借币，auto_repay： 自动还币
+    string brokerID =21; // 自定义字段，用于标记下单策略对象的ID
 }
 
+// 定义小时bar消息接收对象
+service CustomDataReceiver{
+    rpc CustomDataReceiver(BarData) returns (Response){};
+}
 
-
-// 定义bar消息接收对象
-service BarDataReceiver{
-    rpc BarDataReceiver(BarData) returns (Response){};
+// 定义历史bar消息接收对象
+service SubmitServerReceiver{
+    rpc SubmitServerReceiver(LocalSubmit) returns (Response){};
 }
 
 // 定义tick消息接收对象
@@ -80,5 +98,9 @@ service TickDataReceiver{
 //
 service OrerReceiver{
     rpc OrerRReceiver(Order) returns (Response){};
+}
+
+service JsonReceiver{
+    rpc JsonReceiver(JsonInfo) returns (Response){};
 }
 

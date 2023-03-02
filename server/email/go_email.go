@@ -41,7 +41,7 @@ func SubmitStatus() {
 		json.Unmarshal(temp, &temp_data)
 		if _, ok := temp_data["data"]; ok {
 			SendMessage(make_formate(temp_data["data"].([]interface{})[0]), "965377515@qq.com") //15940402405@163.com
-			SendMessage(make_formate(temp_data["data"].([]interface{})[0]), "15940402405@163.com")
+			// SendMessage(make_formate(temp_data["data"].([]interface{})[0]), "15940402405@163.com")
 		}
 	}
 }
@@ -56,7 +56,7 @@ func make_formate(info interface{}) string {
 		temp_str += ":"
 		if tool_list[i] == "begin" || tool_list[i] == "end" || tool_list[i] == "ts" {
 			temp_int, _ := strconv.Atoi(info.(map[string]interface{})[tool_list[i]].(string))
-			temp_str += time.Unix(int64(temp_int)/1000, 0).Format("2006-01-02 15:04:05")
+			temp_str += time.Unix(int64(temp_int)/1000, 0).Local().Format("2006-01-02 15:04:05")
 		} else {
 			temp_str += info.(map[string]interface{})[tool_list[i]].(string)
 		}

@@ -5,6 +5,7 @@ import (
 	"global"
 	"log"
 	"strconv"
+	"sync"
 	"websocketlocal"
 )
 
@@ -16,6 +17,12 @@ type QueryBar struct {
 	// private
 	local_ws         *websocketlocal.WebSocketLocal
 	local_insid_info map[string]*global.BarInfo
+	stop_signal      sync.Map
+}
+
+func (Q *QueryBar) Close() {
+	Q.stop_signal.Store("stop", true)
+	Q.local_ws.Close()
 }
 
 func (Q *QueryBar) init() {
@@ -31,6 +38,8 @@ func (Q *QueryBar) init() {
 		Q.local_insid_info[Q.InsId_list[i]].Insid = Q.InsId_list[i]
 	}
 	Q.Bar_info_chan = make(chan *global.BarInfo, 1000)
+	Q.stop_signal = sync.Map{}
+	Q.stop_signal.Store("stop", false)
 	Q.local_ws = websocketlocal.GenWebSocket("wss://ws.okx.com:8443/ws/v5/public", 10)
 }
 
@@ -120,9 +129,11 @@ func (Q *QueryBar) Start() {
 	Q.submit_bar()
 	Q.submit_openinterest()
 	go Q.local_ws.StartGather()
-	for {
+	judge, _ := Q.stop_signal.Load("stop")
+	for !judge.(bool) {
 		info := <-Q.local_ws.InfoChan
 		Q.update_tick_info(info)
+		judge, _ = Q.stop_signal.Load("stop")
 	}
 }
 

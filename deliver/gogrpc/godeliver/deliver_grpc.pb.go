@@ -18,86 +18,172 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// BarDataReceiverClient is the client API for BarDataReceiver service.
+// CustomDataReceiverClient is the client API for CustomDataReceiver service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type BarDataReceiverClient interface {
-	BarDataReceiver(ctx context.Context, in *BarData, opts ...grpc.CallOption) (*Response, error)
+type CustomDataReceiverClient interface {
+	CustomDataReceiver(ctx context.Context, in *BarData, opts ...grpc.CallOption) (*Response, error)
 }
 
-type barDataReceiverClient struct {
+type customDataReceiverClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewBarDataReceiverClient(cc grpc.ClientConnInterface) BarDataReceiverClient {
-	return &barDataReceiverClient{cc}
+func NewCustomDataReceiverClient(cc grpc.ClientConnInterface) CustomDataReceiverClient {
+	return &customDataReceiverClient{cc}
 }
 
-func (c *barDataReceiverClient) BarDataReceiver(ctx context.Context, in *BarData, opts ...grpc.CallOption) (*Response, error) {
+func (c *customDataReceiverClient) CustomDataReceiver(ctx context.Context, in *BarData, opts ...grpc.CallOption) (*Response, error) {
 	out := new(Response)
-	err := c.cc.Invoke(ctx, "/BarDataReceiver/BarDataReceiver", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/CustomDataReceiver/CustomDataReceiver", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// BarDataReceiverServer is the server API for BarDataReceiver service.
-// All implementations must embed UnimplementedBarDataReceiverServer
+// CustomDataReceiverServer is the server API for CustomDataReceiver service.
+// All implementations must embed UnimplementedCustomDataReceiverServer
 // for forward compatibility
-type BarDataReceiverServer interface {
-	BarDataReceiver(context.Context, *BarData) (*Response, error)
-	mustEmbedUnimplementedBarDataReceiverServer()
+type CustomDataReceiverServer interface {
+	CustomDataReceiver(context.Context, *BarData) (*Response, error)
+	mustEmbedUnimplementedCustomDataReceiverServer()
 }
 
-// UnimplementedBarDataReceiverServer must be embedded to have forward compatible implementations.
-type UnimplementedBarDataReceiverServer struct {
+// UnimplementedCustomDataReceiverServer must be embedded to have forward compatible implementations.
+type UnimplementedCustomDataReceiverServer struct {
 }
 
-func (UnimplementedBarDataReceiverServer) BarDataReceiver(context.Context, *BarData) (*Response, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BarDataReceiver not implemented")
+func (UnimplementedCustomDataReceiverServer) CustomDataReceiver(context.Context, *BarData) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CustomDataReceiver not implemented")
 }
-func (UnimplementedBarDataReceiverServer) mustEmbedUnimplementedBarDataReceiverServer() {}
+func (UnimplementedCustomDataReceiverServer) mustEmbedUnimplementedCustomDataReceiverServer() {}
 
-// UnsafeBarDataReceiverServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to BarDataReceiverServer will
+// UnsafeCustomDataReceiverServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to CustomDataReceiverServer will
 // result in compilation errors.
-type UnsafeBarDataReceiverServer interface {
-	mustEmbedUnimplementedBarDataReceiverServer()
+type UnsafeCustomDataReceiverServer interface {
+	mustEmbedUnimplementedCustomDataReceiverServer()
 }
 
-func RegisterBarDataReceiverServer(s grpc.ServiceRegistrar, srv BarDataReceiverServer) {
-	s.RegisterService(&BarDataReceiver_ServiceDesc, srv)
+func RegisterCustomDataReceiverServer(s grpc.ServiceRegistrar, srv CustomDataReceiverServer) {
+	s.RegisterService(&CustomDataReceiver_ServiceDesc, srv)
 }
 
-func _BarDataReceiver_BarDataReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _CustomDataReceiver_CustomDataReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(BarData)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(BarDataReceiverServer).BarDataReceiver(ctx, in)
+		return srv.(CustomDataReceiverServer).CustomDataReceiver(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/BarDataReceiver/BarDataReceiver",
+		FullMethod: "/CustomDataReceiver/CustomDataReceiver",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(BarDataReceiverServer).BarDataReceiver(ctx, req.(*BarData))
+		return srv.(CustomDataReceiverServer).CustomDataReceiver(ctx, req.(*BarData))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// BarDataReceiver_ServiceDesc is the grpc.ServiceDesc for BarDataReceiver service.
+// CustomDataReceiver_ServiceDesc is the grpc.ServiceDesc for CustomDataReceiver service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var BarDataReceiver_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "BarDataReceiver",
-	HandlerType: (*BarDataReceiverServer)(nil),
+var CustomDataReceiver_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "CustomDataReceiver",
+	HandlerType: (*CustomDataReceiverServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "BarDataReceiver",
-			Handler:    _BarDataReceiver_BarDataReceiver_Handler,
+			MethodName: "CustomDataReceiver",
+			Handler:    _CustomDataReceiver_CustomDataReceiver_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "deliver.proto",
+}
+
+// SubmitServerReceiverClient is the client API for SubmitServerReceiver service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type SubmitServerReceiverClient interface {
+	SubmitServerReceiver(ctx context.Context, in *LocalSubmit, opts ...grpc.CallOption) (*Response, error)
+}
+
+type submitServerReceiverClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewSubmitServerReceiverClient(cc grpc.ClientConnInterface) SubmitServerReceiverClient {
+	return &submitServerReceiverClient{cc}
+}
+
+func (c *submitServerReceiverClient) SubmitServerReceiver(ctx context.Context, in *LocalSubmit, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/SubmitServerReceiver/SubmitServerReceiver", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// SubmitServerReceiverServer is the server API for SubmitServerReceiver service.
+// All implementations must embed UnimplementedSubmitServerReceiverServer
+// for forward compatibility
+type SubmitServerReceiverServer interface {
+	SubmitServerReceiver(context.Context, *LocalSubmit) (*Response, error)
+	mustEmbedUnimplementedSubmitServerReceiverServer()
+}
+
+// UnimplementedSubmitServerReceiverServer must be embedded to have forward compatible implementations.
+type UnimplementedSubmitServerReceiverServer struct {
+}
+
+func (UnimplementedSubmitServerReceiverServer) SubmitServerReceiver(context.Context, *LocalSubmit) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitServerReceiver not implemented")
+}
+func (UnimplementedSubmitServerReceiverServer) mustEmbedUnimplementedSubmitServerReceiverServer() {}
+
+// UnsafeSubmitServerReceiverServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to SubmitServerReceiverServer will
+// result in compilation errors.
+type UnsafeSubmitServerReceiverServer interface {
+	mustEmbedUnimplementedSubmitServerReceiverServer()
+}
+
+func RegisterSubmitServerReceiverServer(s grpc.ServiceRegistrar, srv SubmitServerReceiverServer) {
+	s.RegisterService(&SubmitServerReceiver_ServiceDesc, srv)
+}
+
+func _SubmitServerReceiver_SubmitServerReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LocalSubmit)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubmitServerReceiverServer).SubmitServerReceiver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/SubmitServerReceiver/SubmitServerReceiver",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubmitServerReceiverServer).SubmitServerReceiver(ctx, req.(*LocalSubmit))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// SubmitServerReceiver_ServiceDesc is the grpc.ServiceDesc for SubmitServerReceiver service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var SubmitServerReceiver_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "SubmitServerReceiver",
+	HandlerType: (*SubmitServerReceiverServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "SubmitServerReceiver",
+			Handler:    _SubmitServerReceiver_SubmitServerReceiver_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -270,6 +356,92 @@ var OrerReceiver_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OrerRReceiver",
 			Handler:    _OrerReceiver_OrerRReceiver_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "deliver.proto",
+}
+
+// JsonReceiverClient is the client API for JsonReceiver service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type JsonReceiverClient interface {
+	JsonReceiver(ctx context.Context, in *JsonInfo, opts ...grpc.CallOption) (*Response, error)
+}
+
+type jsonReceiverClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewJsonReceiverClient(cc grpc.ClientConnInterface) JsonReceiverClient {
+	return &jsonReceiverClient{cc}
+}
+
+func (c *jsonReceiverClient) JsonReceiver(ctx context.Context, in *JsonInfo, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/JsonReceiver/JsonReceiver", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// JsonReceiverServer is the server API for JsonReceiver service.
+// All implementations must embed UnimplementedJsonReceiverServer
+// for forward compatibility
+type JsonReceiverServer interface {
+	JsonReceiver(context.Context, *JsonInfo) (*Response, error)
+	mustEmbedUnimplementedJsonReceiverServer()
+}
+
+// UnimplementedJsonReceiverServer must be embedded to have forward compatible implementations.
+type UnimplementedJsonReceiverServer struct {
+}
+
+func (UnimplementedJsonReceiverServer) JsonReceiver(context.Context, *JsonInfo) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JsonReceiver not implemented")
+}
+func (UnimplementedJsonReceiverServer) mustEmbedUnimplementedJsonReceiverServer() {}
+
+// UnsafeJsonReceiverServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to JsonReceiverServer will
+// result in compilation errors.
+type UnsafeJsonReceiverServer interface {
+	mustEmbedUnimplementedJsonReceiverServer()
+}
+
+func RegisterJsonReceiverServer(s grpc.ServiceRegistrar, srv JsonReceiverServer) {
+	s.RegisterService(&JsonReceiver_ServiceDesc, srv)
+}
+
+func _JsonReceiver_JsonReceiver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(JsonInfo)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(JsonReceiverServer).JsonReceiver(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/JsonReceiver/JsonReceiver",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(JsonReceiverServer).JsonReceiver(ctx, req.(*JsonInfo))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// JsonReceiver_ServiceDesc is the grpc.ServiceDesc for JsonReceiver service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var JsonReceiver_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "JsonReceiver",
+	HandlerType: (*JsonReceiverServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "JsonReceiver",
+			Handler:    _JsonReceiver_JsonReceiver_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

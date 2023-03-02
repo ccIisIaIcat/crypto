@@ -5,6 +5,7 @@ import (
 	"global"
 	"log"
 	"strconv"
+	"sync"
 	"time"
 	"websocketlocal"
 )
@@ -13,10 +14,15 @@ type QueryTick struct {
 	// public
 	InsId_list     []string
 	Tick_info_chan chan *global.TickInfo // 对外提供的chan访问接口
-	InsType        string                // 暂时有三种，SPOT,SWAP,FUTURES
 	// private
 	local_ws         *websocketlocal.WebSocketLocal
 	local_insid_info map[string]*global.TickInfo
+	stop_signal      sync.Map
+}
+
+func (Q *QueryTick) Close() {
+	Q.stop_signal.Store("stop", true)
+	Q.local_ws.Close()
 }
 
 func (Q *QueryTick) init() {
@@ -28,6 +34,8 @@ func (Q *QueryTick) init() {
 		Q.local_insid_info[Q.InsId_list[i]] = &global.TickInfo{}
 		Q.local_insid_info[Q.InsId_list[i]].Insid = Q.InsId_list[i]
 	}
+	Q.stop_signal = sync.Map{}
+	Q.stop_signal.Store("stop", false)
 	Q.Tick_info_chan = make(chan *global.TickInfo, 1000)
 	Q.local_ws = websocketlocal.GenWebSocket("wss://ws.okx.com:8443/ws/v5/public", 10)
 }
@@ -73,9 +81,11 @@ func (Q *QueryTick) Start() {
 	Q.submit_tick()
 	time.Sleep(time.Second)
 	go Q.local_ws.StartGather()
-	for {
+	judge, _ := Q.stop_signal.Load("stop")
+	for !judge.(bool) {
 		info := <-Q.local_ws.InfoChan
 		Q.update_tick_info(info)
+		judge, _ = Q.stop_signal.Load("stop")
 	}
 }
 

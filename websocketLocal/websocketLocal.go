@@ -21,6 +21,7 @@ type WebSocketLocal struct {
 	subcribeInfo []string        // 正在订阅的服务，用于断线重连恢复
 	temp_chan    chan []byte
 	check_map    sync.Map
+	signal       bool
 }
 
 // 生成一个websocket对象
@@ -28,6 +29,7 @@ func GenWebSocket(address string, timecounter int) *WebSocketLocal {
 	ws := WebSocketLocal{}
 	ws.Address = address
 	ws.TimeCounter = timecounter
+	ws.signal = true
 	ws.subcribeInfo = make([]string, 0)
 	ws.InfoChan = make(chan []byte, 100)
 	ws.temp_chan = make(chan []byte, 1000)
@@ -67,7 +69,7 @@ func (W *WebSocketLocal) Submit(SubInfo []byte, save bool) {
 
 // 一个用于预处理的私有函数
 func (W *WebSocketLocal) preprocess() {
-	for {
+	for W.signal {
 		check, _ := W.check_map.Load("check")
 		for !check.(bool) {
 			time.Sleep(time.Second)
@@ -76,8 +78,10 @@ func (W *WebSocketLocal) preprocess() {
 		}
 		messageType, info, err := W.conn.ReadMessage()
 		if err != nil || messageType == -1 {
-			log.Println("err while get respon", err)
-			W.restartWebsocket()
+			if W.signal {
+				log.Println("err while get respon", err)
+				W.restartWebsocket()
+			}
 		} else {
 			W.temp_chan <- info
 		}
@@ -87,7 +91,7 @@ func (W *WebSocketLocal) preprocess() {
 // 开启获取服务
 func (W *WebSocketLocal) StartGather() {
 	go W.preprocess()
-	for {
+	for W.signal {
 		check, _ := W.check_map.Load("check")
 		for !check.(bool) {
 			time.Sleep(time.Second)
@@ -99,12 +103,13 @@ func (W *WebSocketLocal) StartGather() {
 			W.Submit([]byte("ping"), false)
 			select {
 			case <-time.After(10 * time.Second):
-				log.Println("waiting ping pong timeout, restart websocket")
-				W.restartWebsocket()
+				if W.signal {
+					log.Println("waiting ping pong timeout, restart websocket")
+					W.restartWebsocket()
+				}
 			case temp := <-W.temp_chan:
 				if string(temp) != "pong" {
 					W.InfoChan <- temp
-
 				}
 			}
 
@@ -145,7 +150,12 @@ func (W *WebSocketLocal) restartWebsocket() {
 }
 
 func (W *WebSocketLocal) Close() {
-	W.conn.Close()
+	if W.conn != nil {
+		W.signal = false
+		W.conn.Close()
+		fmt.Println("close")
+	}
+
 }
 
 // func main() {

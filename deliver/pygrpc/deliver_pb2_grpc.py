@@ -5,8 +5,8 @@ import grpc
 import deliver_pb2 as deliver__pb2
 
 
-class BarDataReceiverStub(object):
-    """定义bar消息接收对象
+class CustomDataReceiverStub(object):
+    """定义小时bar消息接收对象
     """
 
     def __init__(self, channel):
@@ -15,44 +15,44 @@ class BarDataReceiverStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.BarDataReceiver = channel.unary_unary(
-                '/BarDataReceiver/BarDataReceiver',
+        self.CustomDataReceiver = channel.unary_unary(
+                '/CustomDataReceiver/CustomDataReceiver',
                 request_serializer=deliver__pb2.BarData.SerializeToString,
                 response_deserializer=deliver__pb2.Response.FromString,
                 )
 
 
-class BarDataReceiverServicer(object):
-    """定义bar消息接收对象
+class CustomDataReceiverServicer(object):
+    """定义小时bar消息接收对象
     """
 
-    def BarDataReceiver(self, request, context):
+    def CustomDataReceiver(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
 
-def add_BarDataReceiverServicer_to_server(servicer, server):
+def add_CustomDataReceiverServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'BarDataReceiver': grpc.unary_unary_rpc_method_handler(
-                    servicer.BarDataReceiver,
+            'CustomDataReceiver': grpc.unary_unary_rpc_method_handler(
+                    servicer.CustomDataReceiver,
                     request_deserializer=deliver__pb2.BarData.FromString,
                     response_serializer=deliver__pb2.Response.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'BarDataReceiver', rpc_method_handlers)
+            'CustomDataReceiver', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class BarDataReceiver(object):
-    """定义bar消息接收对象
+class CustomDataReceiver(object):
+    """定义小时bar消息接收对象
     """
 
     @staticmethod
-    def BarDataReceiver(request,
+    def CustomDataReceiver(request,
             target,
             options=(),
             channel_credentials=None,
@@ -62,8 +62,72 @@ class BarDataReceiver(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/BarDataReceiver/BarDataReceiver',
+        return grpc.experimental.unary_unary(request, target, '/CustomDataReceiver/CustomDataReceiver',
             deliver__pb2.BarData.SerializeToString,
+            deliver__pb2.Response.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+
+class SubmitServerReceiverStub(object):
+    """定义历史bar消息接收对象
+    """
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.SubmitServerReceiver = channel.unary_unary(
+                '/SubmitServerReceiver/SubmitServerReceiver',
+                request_serializer=deliver__pb2.LocalSubmit.SerializeToString,
+                response_deserializer=deliver__pb2.Response.FromString,
+                )
+
+
+class SubmitServerReceiverServicer(object):
+    """定义历史bar消息接收对象
+    """
+
+    def SubmitServerReceiver(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_SubmitServerReceiverServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'SubmitServerReceiver': grpc.unary_unary_rpc_method_handler(
+                    servicer.SubmitServerReceiver,
+                    request_deserializer=deliver__pb2.LocalSubmit.FromString,
+                    response_serializer=deliver__pb2.Response.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'SubmitServerReceiver', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class SubmitServerReceiver(object):
+    """定义历史bar消息接收对象
+    """
+
+    @staticmethod
+    def SubmitServerReceiver(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/SubmitServerReceiver/SubmitServerReceiver',
+            deliver__pb2.LocalSubmit.SerializeToString,
             deliver__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
@@ -134,7 +198,8 @@ class TickDataReceiver(object):
 
 
 class OrerReceiverStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -150,7 +215,8 @@ class OrerReceiverStub(object):
 
 
 class OrerReceiverServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """
+    """
 
     def OrerRReceiver(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -174,7 +240,8 @@ def add_OrerReceiverServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class OrerReceiver(object):
-    """Missing associated documentation comment in .proto file."""
+    """
+    """
 
     @staticmethod
     def OrerRReceiver(request,
@@ -189,6 +256,67 @@ class OrerReceiver(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/OrerReceiver/OrerRReceiver',
             deliver__pb2.Order.SerializeToString,
+            deliver__pb2.Response.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+
+class JsonReceiverStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.JsonReceiver = channel.unary_unary(
+                '/JsonReceiver/JsonReceiver',
+                request_serializer=deliver__pb2.JsonInfo.SerializeToString,
+                response_deserializer=deliver__pb2.Response.FromString,
+                )
+
+
+class JsonReceiverServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def JsonReceiver(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_JsonReceiverServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'JsonReceiver': grpc.unary_unary_rpc_method_handler(
+                    servicer.JsonReceiver,
+                    request_deserializer=deliver__pb2.JsonInfo.FromString,
+                    response_serializer=deliver__pb2.Response.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'JsonReceiver', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+
+
+ # This class is part of an EXPERIMENTAL API.
+class JsonReceiver(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def JsonReceiver(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/JsonReceiver/JsonReceiver',
+            deliver__pb2.JsonInfo.SerializeToString,
             deliver__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

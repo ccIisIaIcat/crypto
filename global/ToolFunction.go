@@ -1,6 +1,9 @@
 package global
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
+	"encoding/base64"
 	"time"
 
 	"gopkg.in/ini.v1"
@@ -39,4 +42,10 @@ func GetConfig(conf_path string) Config {
 		Config_obj.UserInfo[temp_list[i]] = temp_user
 	}
 	return Config_obj
+}
+
+func ComputeHmacSha256(message string, secret string) string {
+	h := hmac.New(sha256.New, []byte(secret))
+	h.Write([]byte(message))
+	return base64.StdEncoding.EncodeToString(h.Sum(nil))
 }
