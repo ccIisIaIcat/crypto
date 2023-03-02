@@ -3,11 +3,12 @@ import threading
 import grpc
 import deliver_pb2
 import deliver_pb2_grpc
-import datetime
+import time
 import tool
 import json
 import numpy as np
 import pandas as pd
+from collections.abc import Iterable
 
 
 class strategy:
@@ -33,8 +34,8 @@ class strategy:
         self.portorder = conf.portorder
         channel = grpc.insecure_channel('localhost:'+self.portsubmit)
         stub = deliver_pb2_grpc.SubmitServerReceiverStub(channel)
-        channel2 = grpc.insecure_channel('localhost:4353')
-        self.stub_order = deliver_pb2_grpc.SubmitServerReceiverStub(channel2)
+        channel2 = grpc.insecure_channel('localhost:'+self.portorder)
+        self.stub_order = deliver_pb2_grpc.OrerReceiverStub(channel2)
         response = stub.SubmitServerReceiver(conf.genLocalSubmit())
         print(response)
     
@@ -43,39 +44,43 @@ class strategy:
     bar_list = tool.BarinfoArray(Insid="ETH-USDT-SWAP")
     bar_hour_list = tool.BarinfoArray(Insid="ETH-USDT-SWAP")
     
+    
     def UpdateBarCustom(self,bar_info):
-        if isinstance(bar_info,(list,np.array,pd.Series)):
+        if isinstance(bar_info,Iterable):
             self.bar_list.addnum(bar_info)
         else:
             self.bar_list.add(tool.barinfo(bar_info))
-        print("infogather barhour called",self.bar_list.df)
+        tool.genhourbarCustom(self,self.bar_list,"59")
+        # print("infogather barhour called",self.bar_list.df)
         
     def UpdateTick(self,tick_info):
-        if isinstance(tick_info,(list,np.array,pd.Series)):
+        if isinstance(tick_info,Iterable):
             self.tick_list.addnum(tick_info)
         else:
             self.tick_list.add(tool.tickinfo(tick_info))
-        # tool.genhourbarCustom(self,self.bar_list,"59")
-        # self.tick_list.addnum(["a",1,2,3,4,5])
         print("infogather tick called",self.tick_list.df)
         
     def UpdateAccount(self,account_info):
         format_info = json.loads(account_info)
-        # print(format_info)
+        print(format_info)
         if "arg" in format_info:
-            if format_info["arg"]["channel"] == "account":
-                print("infogather account called",format_info["data"][0]["details"][0])
-            if format_info["arg"]["channel"] == "positions":
-                print("infogather position called")
+            # if format_info["arg"]["channel"] == "account":
+            #     print("infogather account called",format_info["data"][0]["details"][0])
+            # if format_info["arg"]["channel"] == "positions":
+            #     print("infogather position called",format_info["data"][0])
             if format_info["arg"]["channel"] == "orders":
-                print("infogather orders called")
+                print("oooooooooooooooooooooooorder")
+                print(format_info["arg"])
+                print("infogather orders called",format_info["data"][0])
         
     def GenHourBarCustom(self,bar_info):
-        print(bar_info)
+        self.bar_hour_list.add(bar_info)
+        print(self.bar_hour_list.df)
         
         
     def Makeorder(self,order_info:tool.ordertemplate):
         response = self.stub_order.OrerRReceiver(order_info.genOrder())
+        print(response.response_me)
         return response
         
     def Start(self):
@@ -92,8 +97,8 @@ class strategy:
 if __name__ == '__main__':
     ############################################
     my_conf = tool.config()
-    # 订阅对象
-    my_conf.subtype = "account"
+    # 订阅对象.可选（tick,bar,account,position,order）
+    my_conf.subtype = "order"
     # bar相关
     my_conf.barcustom = "1m"
     my_conf.barInsid = "ETH-USDT-SWAP"
@@ -108,7 +113,19 @@ if __name__ == '__main__':
     my_conf.portorder = "6102"
     ############################################
     datagather = strategy(my_conf)
+    # tool.Load1MBarFromLocalMysql(datagather,"root","zwj12345","crypto_swap","ETH-USDT-SWAP")
+    odt = tool.ordertemplate()
+    odt.insId = "ETH-USDT-SWAP"
+    odt.posSide = "long"
+    odt.tdMode = "cross"
+    odt.side = "sell"
+    odt.ordType = "market"
+    odt.sz = "1"
+    odt.clOrdId = "lalala558875"
     datagather.Start()
+    time.sleep(10)
+    tata = datagather.Makeorder(odt)
+    print(tata)
     # time.sleep(10)
     # {"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}
     # datagather.Makeorder(deliver_pb2.Order(insId="ETH-USDT-SWAP",posSide="long",tdMode="cross",side="buy",ordType="market",sz="1"))

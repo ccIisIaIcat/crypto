@@ -13,6 +13,7 @@ from collections.abc import Iterable
 a = tool.barinfo()
 
 print(isinstance(a,Iterable))
+print((1677232800000-1677229200000)/1000/60)
 
 # my_conf = tool.config()
 # my_conf.barInsid = "1"

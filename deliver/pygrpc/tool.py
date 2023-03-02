@@ -4,7 +4,7 @@ import datetime
 import deliver_pb2
 import time
 import pymysql
-
+from collections.abc import Iterable
 
 
 
@@ -114,7 +114,7 @@ class barinfo:
     # Ts_FundingRate = 0
     # TS_NextFundingRate = 0
     def __init__(self,bar_info=""):
-        if bar_info != "":
+        if not isinstance(bar_info,Iterable):
             self.InsID =  bar_info.Insid 
             self.TS_open = bar_info.Ts_open
             self.Open_price = bar_info.Open_price
@@ -132,13 +132,14 @@ class tickinfo:
     Bid1_price = 0
     Ask1_volumn = 0
     Bid1_volumn = 0
-    def __init__(self,tick_info):
-        self.Insid = tick_info.Insid
-        self.Ts_Price = tick_info.Ts_Price
-        self.Ask1_price = tick_info.Ask1_price
-        self.Bid1_price = tick_info.Bid1_price
-        self.Ask1_volumn = tick_info.Ask1_volumn
-        self.Bid1_volumn = tick_info.Bid1_volumn
+    def __init__(self,tick_info=""):
+        if not isinstance(tick_info,Iterable):
+            self.Insid = tick_info.Insid
+            self.Ts_Price = tick_info.Ts_Price
+            self.Ask1_price = tick_info.Ask1_price
+            self.Bid1_price = tick_info.Bid1_price
+            self.Ask1_volumn = tick_info.Ask1_volumn
+            self.Bid1_volumn = tick_info.Bid1_volumn
 
 class BarinfoArray():
     Array = []
@@ -164,8 +165,11 @@ class BarinfoArray():
             self.df.drop(0,inplace=True)
             self.df.reset_index(inplace=True,drop=True)
     def addnum(self,value):
+        # print(value)
         self.df.loc[len(self.df)] = value
         self.Array.append(barinfo(self.df.loc[len(self.df)-1]))
+    def getlength(self):
+        return len(self.df)
 
 class TickinfoArray():
     Array = []
@@ -196,32 +200,49 @@ class TickinfoArray():
     def addnum(self,value):
         self.df.loc[len(self.df)] = value
         self.Array.append(tickinfo(self.df.loc[len(self.df)-1]))
+    def getlength(self):
+        return len(self.df)
 
 # 调用该方法时，策略必须声明GenHourBarCustom方法
 def genhourbarCustom(strategy,bardf:BarinfoArray,end_min:str):
     last_series = bardf.df.iloc[-1]
     length = 60
-    if time.localtime(float(last_series["Ts_Price"])/1000).tm_min == end_min:
+    if str(time.localtime(float(last_series["TS_open"])/1000).tm_min) == end_min:
         if len(bardf.df) >= length:
             tempbar = barinfo()
             tempbar.InsID = last_series["Insid"]
-            tempbar.TS_open = bardf.df["Ts_Price"] - length*60*1000
-            tempbar.Open_price = bardf.df["Open_price"][-60:][0]
-            tempbar.High_price = bardf.df["High_price"][-60:].max()
-            tempbar.Low_price = bardf.df["Low_price"][-60:].min()
-            tempbar.Close_price = bardf.df["Close_price"][-1]
-            tempbar.Vol = bardf.df["Vol"][-60:].sum()
-            tempbar.VolCcy = bardf.df["VolCcy"][-60:].sum()
-            tempbar.VolCcyQuote = bardf.df["VolCcyQuote"][-60:].sum()
-        strategy.GenHourBarCustom(tempbar)
+            tempbar.TS_open = list(bardf.df["TS_open"][-length:])[0]
+            tempbar.Open_price = list(bardf.df["Open_price"][-length:])[0]
+            tempbar.High_price = bardf.df["High_price"][-length:].max()
+            tempbar.Low_price = bardf.df["Low_price"][-length:].min()
+            tempbar.Close_price = list(bardf.df["Open_price"][-length:])[-1]
+            tempbar.Vol = bardf.df["Vol"][-length:].sum()
+            tempbar.VolCcy = bardf.df["VolCcy"][-length:].sum()
+            tempbar.VolCcyQuote = bardf.df["VolCcyQuote"][-length:].sum()
+            strategy.GenHourBarCustom(tempbar)
     
-
 # 调用此方法的strategy必须包含UpdateBarCustom方法
-def Load1MBarFromLocalMysql(strategy,user,password,database,length,Insid):
+def Load1MBarFromLocalMysql(strategy,user,password,database,Insid,length=0):
     con = pymysql.connect(host="127.0.0.1",user=user,password=password,db=database)
     # 读取sql
-    temp_df = pd.read_sql("select * from +`" + Insid + "`;",con)
-    temp_df = temp_df.sort_
+    temp_df = pd.read_sql("select * from `" + Insid + "`;",con)
+    info_matrix = temp_df[["Insid","Ts_open","Open_price","High_price","Low_price","Close_price","Vol","VolCcy","VolCcyQuote"]].drop_duplicates(subset=["Ts_open"], keep="first").sort_values(by="Ts_open",ascending=True).values
+    if length == 0:
+        length = len(info_matrix)
+    info_matrix = info_matrix[-length:]
+    for i in range(length):
+        strategy.UpdateBarCustom(info_matrix[i])
+
+# 调用此方法的strategy必须包含UpdateBarCustom方法
+def Load1MBarFromCsv(strategy,path,length=0):
+    temp_df = pd.read_csv("path")
+    info_matrix = temp_df[["Insid","Ts_open","Open_price","High_price","Low_price","Close_price","Vol","VolCcy","VolCcyQuote"]].drop_duplicates(subset=["Ts_open"], keep="first").sort_values(by="Ts_open",ascending=True).values
+    if length == 0:
+        length = len(info_matrix)
+    info_matrix = info_matrix[-length:]
+    for i in range(length):
+        strategy.UpdateBarCustom(info_matrix[i])
+    
     
         
 

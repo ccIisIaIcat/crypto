@@ -25,11 +25,13 @@ func (O *OrderServer) OrerRReceiver(ctx context.Context, order *deliver.Order) (
 	format_order := genorder(order)
 	res := O.trade_server.SendOrder(format_order)
 	temp := &deliver.Response{ResponseMe: res}
+	fmt.Println(res)
 	return temp, nil
 }
 
 func (O *OrderServer) OrderServerListen(port string, userconf global.ConfigUser) {
 	O.userconfig = userconf
+	O.trade_server = trade_restful.GenTradeRestful(userconf)
 	lis, err := net.Listen("tcp", "127.0.0.1:"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
