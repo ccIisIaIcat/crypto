@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"strings"
 	"trade_restful"
+	"trade_restful_simulate"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -17,21 +18,36 @@ import (
 
 type OrderServer struct {
 	deliver.UnimplementedOrerReceiverServer
-	trade_server *trade_restful.TradeRestful
-	userconfig   global.ConfigUser
+	trade_server          *trade_restful.TradeRestful
+	trade_server_simulate *trade_restful_simulate.TradeRestfulSimulate
+	userconfig            global.ConfigUser
+	simulate              bool
 }
 
 func (O *OrderServer) OrerRReceiver(ctx context.Context, order *deliver.Order) (*deliver.Response, error) {
 	format_order := genorder(order)
-	res := O.trade_server.SendOrder(format_order)
-	temp := &deliver.Response{ResponseMe: res}
-	fmt.Println(res)
-	return temp, nil
+	if O.simulate {
+		res := O.trade_server_simulate.SendOrder(format_order)
+		temp := &deliver.Response{ResponseMe: res}
+		fmt.Println(res)
+		return temp, nil
+	} else {
+		res := O.trade_server.SendOrder(format_order)
+		temp := &deliver.Response{ResponseMe: res}
+		fmt.Println(res)
+		return temp, nil
+	}
+
 }
 
-func (O *OrderServer) OrderServerListen(port string, userconf global.ConfigUser) {
+func (O *OrderServer) OrderServerListen(port string, userconf global.ConfigUser, simulate bool) {
+	O.simulate = simulate
 	O.userconfig = userconf
-	O.trade_server = trade_restful.GenTradeRestful(userconf)
+	if simulate {
+		O.trade_server_simulate = trade_restful_simulate.GenTradeRestfulSimulate(userconf)
+	} else {
+		O.trade_server = trade_restful.GenTradeRestful(userconf)
+	}
 	lis, err := net.Listen("tcp", "127.0.0.1:"+port)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

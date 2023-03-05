@@ -32,7 +32,7 @@ func GatherSwap() {
 	swap_insid := query_insid.GetInsByType("SWAP")
 
 	conf := global.GetConfig("../../conf/conf.ini")
-	ms := record_mysql.GenMysqlServer(conf.MysqlInfo["Local"], "crypto_swap")
+	ms := record_mysql.GenMysqlServer(conf.MysqlInfo["Local2"], "crypto_swap")
 	// 检查对应表是否创建
 	for i := 0; i < len(swap_insid); i++ {
 		sql := "CREATE TABLE IF NOT EXISTS " + "`" + swap_insid[i] + "`" + "(id int PRIMARY KEY AUTO_INCREMENT, Insid varchar(100), Ts_open bigint, Open_price double, High_price double, Low_price double, Close_price double, Vol double, VolCcy double, VolCcyQuote double, FundingRate double, NextFundingRate double, Ts_FundingRate bigint, TS_NextFundingRate bigint,Oi double,OiCcy double,Ts_oi bigint)ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;"
@@ -59,7 +59,7 @@ func GatherSwap() {
 func GatherSpot() {
 	spot_insid := query_insid.GetInsByType("SPOT")
 	conf := global.GetConfig("../../conf/conf.ini")
-	ms := record_mysql.GenMysqlServer(conf.MysqlInfo["Local"], "crypto_spot")
+	ms := record_mysql.GenMysqlServer(conf.MysqlInfo["Local2"], "crypto_spot")
 	// 检查对应表是否创建
 	for i := 0; i < len(spot_insid); i++ {
 		sql := "CREATE TABLE IF NOT EXISTS " + "`" + spot_insid[i] + "`" + "(id int PRIMARY KEY AUTO_INCREMENT, Insid varchar(100), Ts_open bigint, Open_price double, High_price double, Low_price double, Close_price double, Vol double, VolCcy double, VolCcyQuote double,Oi double,OiCcy double,Ts_oi bigint)ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;"
@@ -82,7 +82,7 @@ func GatherSpot() {
 func GatherFutureQuarter() {
 	future_insid := query_insid.GetInsByTypeAndAlias("FUTURES", "quarter")
 	conf := global.GetConfig("../../conf/conf.ini")
-	ms := record_mysql.GenMysqlServer(conf.MysqlInfo["Local"], "crypto_future_quarter")
+	ms := record_mysql.GenMysqlServer(conf.MysqlInfo["Local2"], "crypto_future_quarter")
 	// 检查对应表是否创建
 	for i := 0; i < len(future_insid); i++ {
 		sql := "CREATE TABLE IF NOT EXISTS " + "`" + future_insid[i] + "`" + "(id int PRIMARY KEY AUTO_INCREMENT, Insid varchar(100), Ts_open bigint, Open_price double, High_price double, Low_price double, Close_price double, Vol double, VolCcy double, VolCcyQuote double,Oi double,OiCcy double,Ts_oi bigint)ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;"

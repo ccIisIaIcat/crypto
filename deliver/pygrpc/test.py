@@ -9,11 +9,26 @@ import datetime
 import time
 import json
 from collections.abc import Iterable
+import order_template
 
-a = tool.barinfo()
+# print(order_template.odt_buylong.insId)
 
-print(isinstance(a,Iterable))
-print((1677232800000-1677229200000)/1000/60)
+# a = [0]
+
+# def UpdateId(temp):
+#     temp[0] += 1
+
+# UpdateId(a)
+# print(a)
+# print(abs(-3))
+lala = "12"
+print(float(lala)*3)
+    
+
+# a = tool.barinfo()
+
+# print(isinstance(a,Iterable))
+# print((1677232800000-1677229200000)/1000/60)
 
 # my_conf = tool.config()
 # my_conf.barInsid = "1"

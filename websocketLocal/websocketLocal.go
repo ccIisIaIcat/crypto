@@ -62,7 +62,11 @@ func (W *WebSocketLocal) Submit(SubInfo []byte, save bool) {
 	if err != nil {
 		log.Println("submit failed:", err)
 	} else {
-		log.Println("submited")
+		if string(SubInfo) != "ping" {
+			log.Println("submited:", string(SubInfo))
+		} else {
+			log.Println("ping")
+		}
 	}
 
 }

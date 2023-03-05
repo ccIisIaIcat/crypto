@@ -24,7 +24,8 @@ type Account struct {
 	stop_signal    sync.Map
 }
 
-func GenAccount(userconf global.ConfigUser, account_sub bool, order_sub bool, position_sub bool) *Account {
+// simulate_api指定api是否为模拟api
+func GenAccount(userconf global.ConfigUser, account_sub bool, order_sub bool, position_sub bool, simulate_api bool) *Account {
 	ac := &Account{}
 	if account_sub {
 		ac.InfoChanAccount = make(chan []byte, 1000)
@@ -38,7 +39,11 @@ func GenAccount(userconf global.ConfigUser, account_sub bool, order_sub bool, po
 	ac.accountsignal = account_sub
 	ac.orderssiganl = order_sub
 	ac.positiossignal = position_sub
-	ac.ws = websocketlocal.GenWebSocket("wss://ws.okx.com:8443/ws/v5/private", 10)
+	if simulate_api {
+		ac.ws = websocketlocal.GenWebSocket("wss://wspap.okx.com:8443/ws/v5/private?brokerId=9999", 10)
+	} else {
+		ac.ws = websocketlocal.GenWebSocket("wss://ws.okx.com:8443/ws/v5/private", 10)
+	}
 	ac.userconf = userconf
 	ac.stop_signal = sync.Map{}
 	ac.stop_signal.Store("stop", false)

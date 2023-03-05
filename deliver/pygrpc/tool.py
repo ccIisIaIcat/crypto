@@ -215,7 +215,7 @@ def genhourbarCustom(strategy,bardf:BarinfoArray,end_min:str):
             tempbar.Open_price = list(bardf.df["Open_price"][-length:])[0]
             tempbar.High_price = bardf.df["High_price"][-length:].max()
             tempbar.Low_price = bardf.df["Low_price"][-length:].min()
-            tempbar.Close_price = list(bardf.df["Open_price"][-length:])[-1]
+            tempbar.Close_price = list(bardf.df["Close_price"][-length:])[-1]
             tempbar.Vol = bardf.df["Vol"][-length:].sum()
             tempbar.VolCcy = bardf.df["VolCcy"][-length:].sum()
             tempbar.VolCcyQuote = bardf.df["VolCcyQuote"][-length:].sum()
@@ -243,6 +243,8 @@ def Load1MBarFromCsv(strategy,path,length=0):
     for i in range(length):
         strategy.UpdateBarCustom(info_matrix[i])
     
-    
-        
+# 调用此方法用于更新本地id值
+def UpdateOrderId(temp):
+    temp[0] += 1  
+    return temp[0]
 

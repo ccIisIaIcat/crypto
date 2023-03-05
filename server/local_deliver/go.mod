@@ -22,9 +22,12 @@ replace godeliver => ../../deliver/gogrpc/godeliver
 
 replace trade_restful => ../../trade/trade_restful
 
+replace trade_restful_simulate => ../../trade/trade_restful_simulate
+
 replace account => ../../account
 
 require (
+	trade_restful_simulate v0.0.1
 	account v0.0.1
 	global v0.0.1
 	godeliver v0.0.1

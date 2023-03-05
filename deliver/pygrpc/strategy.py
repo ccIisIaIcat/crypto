@@ -98,7 +98,7 @@ if __name__ == '__main__':
     ############################################
     my_conf = tool.config()
     # 订阅对象.可选（tick,bar,account,position,order）
-    my_conf.subtype = "order"
+    my_conf.subtype = "account"
     # bar相关
     my_conf.barcustom = "1m"
     my_conf.barInsid = "ETH-USDT-SWAP"
@@ -113,19 +113,19 @@ if __name__ == '__main__':
     my_conf.portorder = "6102"
     ############################################
     datagather = strategy(my_conf)
-    # tool.Load1MBarFromLocalMysql(datagather,"root","zwj12345","crypto_swap","ETH-USDT-SWAP")
-    odt = tool.ordertemplate()
-    odt.insId = "ETH-USDT-SWAP"
-    odt.posSide = "long"
-    odt.tdMode = "cross"
-    odt.side = "sell"
-    odt.ordType = "market"
-    odt.sz = "1"
-    odt.clOrdId = "lalala558875"
+    # # tool.Load1MBarFromLocalMysql(datagather,"root","zwj12345","crypto_swap","ETH-USDT-SWAP")
+    # odt = tool.ordertemplate()
+    # odt.insId = "ETH-USDT-SWAP"
+    # odt.posSide = "long"
+    # odt.tdMode = "cross"
+    # odt.side = "sell"
+    # odt.ordType = "market"
+    # odt.sz = "1"
+    # odt.clOrdId = "lalala558875"
     datagather.Start()
-    time.sleep(10)
-    tata = datagather.Makeorder(odt)
-    print(tata)
+    # time.sleep(10)
+    # tata = datagather.Makeorder(odt)
+    # print(tata)
     # time.sleep(10)
     # {"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}
     # datagather.Makeorder(deliver_pb2.Order(insId="ETH-USDT-SWAP",posSide="long",tdMode="cross",side="buy",ordType="market",sz="1"))

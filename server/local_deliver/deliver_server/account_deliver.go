@@ -17,8 +17,8 @@ type Account_deliver struct {
 	Signal bool
 }
 
-func DeliverAccount(userconf global.ConfigUser, Port string, account_sub bool, order_sub bool, position_sub bool) int {
-	acd := genAccountDeliver(userconf, account_sub, order_sub, position_sub)
+func DeliverAccount(userconf global.ConfigUser, Port string, account_sub bool, order_sub bool, position_sub bool, simulate_account bool) int {
+	acd := genAccountDeliver(userconf, account_sub, order_sub, position_sub, simulate_account)
 	go acd.ac.Start()
 	time.Sleep(time.Second)
 	go acd.startaccount(Port)
@@ -28,9 +28,9 @@ func DeliverAccount(userconf global.ConfigUser, Port string, account_sub bool, o
 	acd.ac.Close()
 	return 1
 }
-func genAccountDeliver(userconf global.ConfigUser, account_sub bool, order_sub bool, position_sub bool) *Account_deliver {
+func genAccountDeliver(userconf global.ConfigUser, account_sub bool, order_sub bool, position_sub bool, simulate_account bool) *Account_deliver {
 	acd := &Account_deliver{}
-	acd.ac = account.GenAccount(userconf, account_sub, order_sub, position_sub)
+	acd.ac = account.GenAccount(userconf, account_sub, order_sub, position_sub, simulate_account)
 	acd.Signal = false
 
 	return acd

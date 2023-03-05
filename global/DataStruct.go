@@ -20,6 +20,32 @@ type TickInfo struct {
 	TS_NextFundingRate int
 }
 
+type Depth5Info struct {
+	// 信息
+	Insid       string
+	Ts_Price    int
+	Ask1_price  float64
+	Ask2_price  float64
+	Ask3_price  float64
+	Ask4_price  float64
+	Ask5_price  float64
+	Bid1_price  float64
+	Bid2_price  float64
+	Bid3_price  float64
+	Bid4_price  float64
+	Bid5_price  float64
+	Ask1_volumn float64
+	Ask2_volumn float64
+	Ask3_volumn float64
+	Ask4_volumn float64
+	Ask5_volumn float64
+	Bid1_volumn float64
+	Bid2_volumn float64
+	Bid3_volumn float64
+	Bid4_volumn float64
+	Bid5_volumn float64
+}
+
 type BarInfo struct {
 	// bar信息
 	Insid       string

@@ -62,6 +62,7 @@ class strategy:
     stub_order:deliver_pb2_grpc.OrerReceiverStub
     
     def __init__(self,conf:tool.config):
+        # tool.Load1MBarFromLocalMysql(self,"root","zwj12345","crypto_swap","ETH-USDT-SWAP")
         self.trade_forbidden_signal = True
         self.basic_conf = conf
         if conf.tickPort != "":
@@ -74,7 +75,7 @@ class strategy:
         self.portorder = conf.portorder
         channel = grpc.insecure_channel('localhost:'+self.portsubmit)
         stub = deliver_pb2_grpc.SubmitServerReceiverStub(channel)
-        channel2 = grpc.insecure_channel('localhost:4353')
+        channel2 = grpc.insecure_channel('localhost:'+self.portorder)
         self.stub_order = deliver_pb2_grpc.SubmitServerReceiverStub(channel2)
         response = stub.SubmitServerReceiver(conf.genLocalSubmit())
         print(response)
@@ -89,7 +90,8 @@ class strategy:
     
     # 策略对象
     MA_hour = [] # 小时bar的MA均线
-    MA_grad = [] # MA梯度
+    Std_hour = [] # 小时bar对应MA的std
+    MA_grad = [] # MA梯度（该梯度为当前MA和之前MA_gap个MA的梯度，结果乘以1000）
     MA_grad_mean = [] # MA的梯度的平均
     basic_signal = [] # 信号指标1：（MA梯度和梯度平均的差值的绝对值）up代表大于阈值，below代表小于阈值
     
@@ -97,10 +99,11 @@ class strategy:
     bolling_down = [] # 当前布林带的下方
     
     # 策略参数
-    MA_length = 5 # MA均线长度
-    MA_grade_mean_length = 5 # MA均线移动平均长度
-    basic_signal_threshold = 0.5 # 信号指标阈值
-    stop_lose_ratio = 0.05 # 止损比例
+    MA_length = 20 # MA均线长度
+    MA_gap = 20 # 计算梯度时的间隔长度
+    MA_grade_mean_length = 20 # MA均线移动平均长度
+    basic_signal_threshold = 40 # 信号指标阈值
+    stop_lose_ratio = 0.03 # 止损比例
     bolling_std_k = 2 # 布林带方差个数
     
     # 持仓信息（简化起见当前策略只有一笔持仓）
@@ -202,7 +205,7 @@ class strategy:
         # 止损检查
         if len(self.position_record) > 0:
             if self.position_record[0]["posSide"] == "long":
-                if list(self.tick_list.df["Bid1_price"])[-1]/self.position_record[0]["avgPx"]-1 < -0.05:
+                if list(self.tick_list.df["Bid1_price"])[-1]/self.position_record[0]["avgPx"]-1 < -self.stop_lose_ratio:
                     # 止损平多
                     odt_selllong.clOrdId = self.StrategyName + str(self.OrderNumber)
                     self.OrderNumber += 1
@@ -214,7 +217,7 @@ class strategy:
                         del self.order_record[odt_selllong.clOrdId]
                         self.trade_forbidden_signal = False
             if self.position_record[0]["posSide"] == "short":
-                if list(self.tick_list.df["Bid1_price"])[-1]/self.position_record[0]["avgPx"]-1 > 0.05:
+                if list(self.tick_list.df["Bid1_price"])[-1]/self.position_record[0]["avgPx"]-1 > self.stop_lose_ratio:
                     # 止损平空
                     odt_sellshort.clOrdId = self.StrategyName + str(self.OrderNumber)
                     self.OrderNumber += 1
@@ -232,19 +235,20 @@ class strategy:
         self.bar_hour_list.add(bar_info)
         # 小时bar个数大于等于MA均线要求长度，生成MA
         if self.bar_hour_list.getlength() >= self.MA_length:
-            self.MA_hour.append(np.mean(self.bar_hour_list[-self.MA_length:]))
-            std = np.std(self.bar_hour_list[-self.MA_length:])
+            temp_list = list(self.bar_hour_list.df["Close_price"])[-self.MA_length:]
+            self.MA_hour.append(np.mean(temp_list))
+            std = np.std(temp_list,ddof=1)
             self.bolling_down.append(self.MA_hour[-1] - self.bolling_std_k*std)
             self.bolling_up.append(self.MA_hour[-1] + self.bolling_std_k*std)
-        # MA个数大于等于2,生成MA均线梯度值
-        if self.MA_hour >= 2:
-            self.MA_grad.append(self.MA_hour[-1]/self.MA_hour[-2]-1)
+        # MA个数大于等于MA_gap时,生成MA均线梯度值
+        if len(self.MA_hour) > self.MA_gap:
+            self.MA_grad.append((self.MA_hour[-1]/self.MA_hour[-self.MA_gap-1]-1)*1000)
         # 当MA梯度个数大于要求的梯度长度，生成MA梯度均值
         if len(self.MA_grad) >= self.MA_grade_mean_length:
             self.MA_grad_mean.append(np.mean(self.MA_grad[-self.MA_grade_mean_length:]))
             # 当产生MA梯度平均时，计算信号指标
-            self.basic_signal = np.abs(self.MA_grad_mean[-1]-self.MA_grad[-1])
-        
+            self.basic_signal.append(np.abs(self.MA_grad_mean[-1]-self.MA_grad[-1]))
+            print(self.basic_signal[-1])
         # 当basic信号存在且大于阈值时考虑bar交易
         if len(self.basic_signal) > 0 and self.basic_signal[-1]>=self.basic_signal_threshold:
             # 若当前状况可交易
@@ -318,11 +322,11 @@ class strategy:
                                 del self.order_record[odt_buyshort.clOrdId]
                                 self.trade_forbidden_signal = False
             
-        print(self.bar_hour_list.df)
+        # print(self.bar_hour_list.df)
         
     def UpdateAccount(self,account_info):
         format_info = json.loads(account_info)
-        # print(format_info)
+        print(format_info)
         if "arg" in format_info:
             if format_info["arg"]["channel"] == "account":
                 print("infogather account called",format_info["data"][0]["details"][0])
@@ -365,7 +369,7 @@ if __name__ == '__main__':
     ############################################
     my_conf = tool.config()
     # 订阅对象.可选（tick,bar,account,position,order）
-    my_conf.subtype = "tick bar position order"
+    my_conf.subtype = "account"
     # bar相关
     my_conf.barcustom = "1m"
     my_conf.barInsid = "ETH-USDT-SWAP"
@@ -380,7 +384,7 @@ if __name__ == '__main__':
     my_conf.portorder = "6102"
     ############################################
     datagather = strategy(my_conf)
-    tool.Load1MBarFromLocalMysql(datagather,"root","zwj12345","crypto_swap","ETH-USDT-SWAP")
+    
     # datagather.Start()
     # time.sleep(10)
     # {"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}

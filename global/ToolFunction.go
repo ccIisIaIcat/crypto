@@ -24,7 +24,7 @@ func GetConfig(conf_path string) Config {
 	Config_obj.MysqlInfo = make(map[string]ConfigMysql, 0)
 	Config_obj.UserInfo = make(map[string]ConfigUser, 0)
 	// 读取Mysql，目前Mysql类型Local
-	temp_list := []string{"Local", "Rm", "Rm1"}
+	temp_list := []string{"Local", "Local2", "Rm", "Rm1"}
 	for i := 0; i < len(temp_list); i++ {
 		temp_mysql := ConfigMysql{}
 		temp_mysql.Host = cfg.Section("Mysql").Key("Host" + temp_list[i]).String()
@@ -33,7 +33,7 @@ func GetConfig(conf_path string) Config {
 		temp_mysql.Password = cfg.Section("Mysql").Key("Password" + temp_list[i]).String()
 		Config_obj.MysqlInfo[temp_list[i]] = temp_mysql
 	}
-	temp_list = []string{"1"}
+	temp_list = []string{"1", "Simulate"}
 	for i := 0; i < len(temp_list); i++ {
 		temp_user := ConfigUser{}
 		temp_user.Apikey = cfg.Section("User").Key("Apikey" + temp_list[i]).String()
