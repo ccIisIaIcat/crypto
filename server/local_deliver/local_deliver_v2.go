@@ -40,9 +40,7 @@ func (I *InfoDeliver) Start() {
 		select {
 		case temp := <-submitserver.InfoChan:
 			fmt.Println(temp)
-			if temp.Subtype != "ping" {
-				go I.DealRequest(temp)
-			}
+			go I.DealRequest(temp)
 		case <-time.After(time.Second):
 		}
 	}

@@ -1,0 +1,3 @@
+
+def lalal():
+    print("a")

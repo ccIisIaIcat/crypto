@@ -131,6 +131,7 @@ class strategy:
             if format_info["arg"]["channel"] == "positions":
                 print("infogather position called")
             if format_info["arg"]["channel"] == "orders":
+                print(format_info)
                 # 处理订单
                 for order_respon in format_info["data"]:
                     if order_respon["side"] == "buy":
