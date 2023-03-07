@@ -124,8 +124,12 @@ func simulateProcess(original_order string) string {
 // func main() {
 // 	user_conf := global.GetConfig("../../conf/conf.ini")
 // 	gtrs := GenTradeRestfulSimulate(user_conf.UserInfo["Simulate"])
-// 	order := `{"instId": "BTC-USDT-SWAP","tdMode": "cross","posSide":"short","side": "sell","ordType": "market","sz": "100"}`
+// 	order := `{"clOrdId":"sA32","instId": "BTC-USDT-SWAP","tdMode": "cross","posSide":"short","side": "sell","ordType": "market","sz": "100"}`
 // 	// order := `{"instId":"ETH-USDT-SWAP","posSide":"","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}`
 // 	res := gtrs.SendOrder(order)
 // 	fmt.Println(res)
+// 	var temp map[string]interface{}
+// 	json.Unmarshal([]byte(res), &temp)
+// 	fmt.Println(temp["code"].(string))
+// 	fmt.Println(temp["data"].([]interface{})[0].(map[string]interface{})["clOrdId"])
 // }

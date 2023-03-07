@@ -86,6 +86,7 @@ class ordertemplate:
         return temp
 
 class config:
+    strategyname = ""
     subtype = ""
     barcustom = ""
     tickInsid = ""
@@ -97,7 +98,7 @@ class config:
     portsubmit = ""
     portorder = ""
     def genLocalSubmit(self):
-        return deliver_pb2.LocalSubmit(subtype=self.subtype,barcustom=self.barcustom,tickInsid=self.tickInsid,barInsid=self.barInsid,tickPort=self.tickPort,barPort=self.barPort,accountPort=self.accountPort)
+        return deliver_pb2.LocalSubmit(subtype=self.subtype,barcustom=self.barcustom,tickInsid=self.tickInsid,barInsid=self.barInsid,tickPort=self.tickPort,barPort=self.barPort,accountPort=self.accountPort,strategyname=self.strategyname)
     
 class barinfo:
     InsID = ""
@@ -283,5 +284,5 @@ def Load1MBarFromCsv(strategy,path,length=0):
 # 调用此方法用于更新本地id值
 def UpdateOrderId(temp):
     temp[0] += 1  
-    return temp[0]
+    return "0" + str(temp[0])
 

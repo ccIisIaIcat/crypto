@@ -85,3 +85,40 @@ type ConfigUser struct {
 	Secretkey  string
 	Passphrase string
 }
+
+type SubmitInfo struct {
+	Bar     *submitBar
+	Tick    *submitTick
+	Account *submitAccount
+}
+
+func GenSubmitInfo() *SubmitInfo {
+	si := &SubmitInfo{}
+	si.Bar = &submitBar{}
+	si.Tick = &submitTick{}
+	si.Account = &submitAccount{}
+	return si
+}
+
+type submitBar struct {
+	Judge       bool
+	Port        string
+	InsList     []string
+	Custom_type string
+}
+
+type submitTick struct {
+	Judge   bool
+	Port    string
+	InsList []string
+}
+
+type submitAccount struct {
+	Judge         bool
+	OrderJudge    bool
+	PositionJudge bool
+	AccountJudge  bool
+	Simulate      bool
+	Port          string
+	Userconf      ConfigUser
+}

@@ -56,6 +56,12 @@ def serveAccount(gather):
     server.start()
     print("pyaccount grpc server start...")
     server.wait_for_termination()
+
+def servePingPong(gather):
+    print("pingpong deliver start...")
+    while True:
+        gather.stub_submit.SubmitServerReceiver(deliver_pb2.LocalSubmit(subtype="ping",strategyname=gather.StrategyName))
+        time.sleep(2)
     
   
 

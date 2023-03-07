@@ -32,6 +32,7 @@ class strategy:
     portorder:str
     # 订单stud
     stub_order:deliver_pb2_grpc.OrerReceiverStub
+    stub_submit:deliver_pb2_grpc.SubmitServerReceiverStub
     
     # 声明存储对象
     tick_list = TU.TickinfoArray(Insid="ETH-USDT-SWAP",max_length=10)
@@ -71,7 +72,8 @@ class strategy:
     test_a = 0
     
     def __init__(self,conf:TU.config):
-        TU.Load1MBarFromLocalMysql(self,"root","","crypto_swap","ETH-USDT-SWAP")
+        # TU.Load1MBarFromLocalMysql(self,"root","","crypto_swap","ETH-USDT-SWAP")
+        self.StrategyName = conf.strategyname
         self.basic_conf = conf
         if conf.tickPort != "":
             self.porttick = conf.tickPort
@@ -82,10 +84,10 @@ class strategy:
         self.portsubmit = conf.portsubmit
         self.portorder = conf.portorder
         channel = grpc.insecure_channel('localhost:'+self.portsubmit)
-        stub = deliver_pb2_grpc.SubmitServerReceiverStub(channel)
+        self.stub_submit = deliver_pb2_grpc.SubmitServerReceiverStub(channel)
         channel2 = grpc.insecure_channel('localhost:'+self.portorder)
         self.stub_order = deliver_pb2_grpc.OrerReceiverStub(channel2)
-        response = stub.SubmitServerReceiver(conf.genLocalSubmit())
+        response = self.stub_submit.SubmitServerReceiver(conf.genLocalSubmit())
         print(response)
         
     # 声明存储对象
@@ -287,7 +289,7 @@ class strategy:
                 # 处理订单
                 for order_respon in format_info["data"]:
                     print(order_respon)
-                    if order_respon["state"] == "canceled":
+                    if order_respon["state"] == "canceled" or order_respon["state"] == "placed error":
                         if order_respon["clOrdId"] in self.order_record:
                             del self.order_record[order_respon["clOrdId"]] 
                     if order_respon["state"] == "live":
@@ -333,15 +335,19 @@ class strategy:
         tick_thread = threading.Thread(target=pyserver.serveTick,args={self})
         barhour_thread = threading.Thread(target=pyserver.serveBarCustom,args={self})
         account_thread = threading.Thread(target=pyserver.serveAccount,args={self})
+        pingpong_thread = threading.Thread(target=pyserver.servePingPong,args={self})
         tick_thread.start()
         barhour_thread.start()
         account_thread.start()
+        pingpong_thread.start()
                     
 if __name__ == '__main__':
     ############################################
     my_conf = TU.config()
     # 订阅对象.可选（tick,bar,account,position,order）
     my_conf.subtype = "tick order bar"
+    # 策略名
+    my_conf.strategyname = "sA"
     # bar相关
     my_conf.barcustom = "1m"
     my_conf.barInsid = "ETH-USDT-SWAP"

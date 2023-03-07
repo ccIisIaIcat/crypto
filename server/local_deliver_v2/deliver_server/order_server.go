@@ -19,7 +19,7 @@ import (
 
 type OrderServer struct {
 	// public
-	Signal_chan chan string // 对外接口，用于判断
+	Res_chan chan string // 对外接口，用于判断
 	// private
 	deliver.UnimplementedOrerReceiverServer
 	trade_server          *trade_restful.TradeRestful
@@ -42,10 +42,10 @@ func (O *OrderServer) sendOrder() {
 			format_order := genorder(temp_order)
 			if O.simulate {
 				res := O.trade_server_simulate.SendOrder(format_order)
-				O.Signal_chan <- res
+				O.Res_chan <- res
 			} else {
 				res := O.trade_server.SendOrder(format_order)
-				O.Signal_chan <- res
+				O.Res_chan <- res
 			}
 		case <-time.After(time.Millisecond * 50):
 		}
@@ -56,7 +56,7 @@ func (O *OrderServer) sendOrder() {
 func (O *OrderServer) OrderServerListen(port string, userconf global.ConfigUser, simulate bool) {
 	O.simulate = simulate
 	O.userconfig = userconf
-	O.Signal_chan = make(chan string, 100)
+	O.Res_chan = make(chan string, 100)
 	O.order_chan = make(chan *deliver.Order, 100)
 	if simulate {
 		O.trade_server_simulate = trade_restful_simulate.GenTradeRestfulSimulate(userconf)

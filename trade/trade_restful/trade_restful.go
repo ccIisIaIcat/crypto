@@ -99,11 +99,29 @@ func (T *TradeRestful) ChangeLeverage(InsId string, leverage string, mgnMode str
 }
 
 // func main() {
-// 	sample_json := `{"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}`
+// 	sample_json := `{"instId":"ETH-USDT-SWAP","posSide":"long","tdMode":"cross","side":"sell","ordType":"market","sz":"1","clOrdId":"sA01"}`
 // 	conf := global.GetConfig("../../conf/conf.ini")
 // 	tr := GenTradeRestful(conf.UserInfo["1"])
 // 	lalala := tr.ChangeLeverage("ETH-USDT-SWAP", "5", "cross")
 // 	log.Println(lalala)
 // 	lala := tr.SendOrder(sample_json)
 // 	log.Println(lala)
+// 	var temp map[string]interface{}
+// 	json.Unmarshal([]byte(lala), &temp)
+// 	fmt.Println(temp["code"].(string))
+// 	order_name := temp["data"].([]interface{})[0].(map[string]interface{})["clOrdId"]
+// 	fmt.Println(strings.Split(order_name.(string), "0"))
+// }
+
+// func main() {
+// 	user_conf := global.GetConfig("../../conf/conf.ini")
+// 	gtrs := GenTradeRestfulSimulate(user_conf.UserInfo["Simulate"])
+// 	order := `{"clOrdId":"sA32","instId": "BTC-USDT-SWAP","tdMode": "cross","posSide":"short","side": "sell","ordType": "market","sz": "100"}`
+// 	// order := `{"instId":"ETH-USDT-SWAP","posSide":"","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}`
+// 	res := gtrs.SendOrder(order)
+// 	fmt.Println(res)
+// 	var temp map[string]interface{}
+// 	json.Unmarshal([]byte(res), &temp)
+// 	fmt.Println(temp["code"].(string))
+// 	fmt.Println(temp["data"].([]interface{})[0].(map[string]interface{})["clOrdId"])
 // }

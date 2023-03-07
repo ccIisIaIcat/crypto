@@ -16,13 +16,14 @@ import (
 type Tick_deliver struct {
 	InsList    []string
 	query_tick query_tick.QueryTick
+	port       string
 	Signal     bool
 }
 
-func (T *Tick_deliver) DeliverTick(Ins_list []string, Port string) int {
+func (T *Tick_deliver) DeliverTick() int {
 	go T.query_tick.Start()
 	time.Sleep(time.Second)
-	go T.starttick(Port)
+	go T.starttick(T.port)
 	for !T.Signal {
 		time.Sleep(time.Second)
 	}
@@ -33,6 +34,7 @@ func (T *Tick_deliver) DeliverTick(Ins_list []string, Port string) int {
 
 func GenTickDeliver(Ins_list []string, Port string) *Tick_deliver {
 	td := &Tick_deliver{}
+	td.port = Port
 	td.query_tick = query_tick.QueryTick{InsId_list: Ins_list}
 	td.Signal = false
 

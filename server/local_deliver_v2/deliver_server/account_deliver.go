@@ -15,25 +15,32 @@ import (
 type Account_deliver struct {
 	ac     *account.Account
 	Signal bool
+	port   string
 }
 
-func (A *Account_deliver) DeliverAccount(userconf global.ConfigUser, Port string, account_sub bool, order_sub bool, position_sub bool, simulate_account bool) int {
+func (A *Account_deliver) DeliverAccount() int {
 	go A.ac.Start()
 	time.Sleep(time.Second)
-	go A.startaccount(Port)
+	go A.startaccount(A.port)
 	for !A.Signal {
 		time.Sleep(time.Second)
 	}
 	A.ac.Close()
 	return 1
 }
-func GenAccountDeliver(userconf global.ConfigUser, account_sub bool, order_sub bool, position_sub bool, simulate_account bool) *Account_deliver {
+func GenAccountDeliver(userconf global.ConfigUser, account_sub bool, order_sub bool, position_sub bool, simulate_account bool, port string) *Account_deliver {
 	acd := &Account_deliver{}
+	acd.port = port
 	acd.ac = account.GenAccount(userconf, account_sub, order_sub, position_sub, simulate_account)
 	acd.Signal = false
 
 	return acd
 }
+
+func (A *Account_deliver) InsertOutSideOrder(info []byte) {
+	A.ac.InfoChanOrders <- info
+}
+
 func (A *Account_deliver) startaccount(Port string) {
 	conn, err := grpc.Dial("localhost:"+Port, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
