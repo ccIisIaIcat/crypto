@@ -56,12 +56,12 @@ func (B *Bar_deliver) startbarcustom(Port string) {
 		barinfo := <-B.query_bar.Bar_info_chan
 		// fmt.Println(barinfo)
 		// 调用BarDataReceiver接口，发送条消息
-		response, err := c.CustomDataReceiver(ctx, B.CopyBar(barinfo))
+		_, err := c.CustomDataReceiver(ctx, B.CopyBar(barinfo))
 		if err != nil {
 			log.Println(err)
 			B.Signal = true
 		}
-		log.Println(response)
+		// log.Println(response)
 	}
 }
 

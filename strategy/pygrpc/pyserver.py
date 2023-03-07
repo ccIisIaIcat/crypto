@@ -57,11 +57,6 @@ def serveAccount(gather):
     print("pyaccount grpc server start...")
     server.wait_for_termination()
     
-  
-
-
-
-    
 def NeverStop():
     while True:
         time.sleep(1000)

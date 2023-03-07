@@ -120,6 +120,8 @@ class strategy:
             if not self.trade_forbidden_signal: 
                 # 当tick的ask小于下方布林带时,做多
                 if list(self.tick_list.df["Ask1_price"])[-1] < self.bolling_down[-1]:
+                    self.trade_df.loc[len(self.trade_df)] = [list(self.tick_list.df["TS_open"])[-1],"get_signal","long"]
+                    self.trade_df.to_csv("../trade_record.csv",index=False)
                 # if self.test_a == 30 :
                     # 如果没有仓位，开仓
                     if len(self.position_record) == 0:
@@ -151,7 +153,9 @@ class strategy:
                         
                 # 当tick的bid大于上方布林带时,做空
                 if list(self.tick_list.df["Bid1_price"])[-1] > self.bolling_up[-1]:
-                # if self.test_a == 180 :
+                    # if self.test_a == 180 :
+                    self.trade_df.loc[len(self.trade_df)] = [list(self.tick_list.df["TS_open"])[-1],"get_signal","short"]
+                    self.trade_df.to_csv("../trade_record.csv",index=False)
                     # 如果没有仓位，开空
                     if len(self.position_record) == 0:
                         odt_short.clOrdId = self.StrategyName + str(TU.UpdateOrderId(self.OrderNumber))
@@ -187,7 +191,7 @@ class strategy:
         if self.bar_hour_list.getlength() >= self.MA_length:
             temp_list = list(self.bar_hour_list.df["Close_price"])[-self.MA_length:]
             self.MA_hour.append(np.mean(temp_list))
-            std = np.std(temp_list)
+            std = np.std(temp_list,ddof=1)
             self.Std_hour.append(std)
             self.bolling_down.append(self.MA_hour[-1] - self.bolling_std_k*std)
             self.bolling_up.append(self.MA_hour[-1] + self.bolling_std_k*std)
@@ -337,7 +341,7 @@ if __name__ == '__main__':
     ############################################
     my_conf = TU.config()
     # 订阅对象.可选（tick,bar,account,position,order）
-    my_conf.subtype = "tick order"
+    my_conf.subtype = "tick order bar"
     # bar相关
     my_conf.barcustom = "1m"
     my_conf.barInsid = "ETH-USDT-SWAP"
@@ -354,6 +358,3 @@ if __name__ == '__main__':
     datagather = strategy(my_conf)
     datagather.Start()
     pyserver.NeverStop()
-
-
-

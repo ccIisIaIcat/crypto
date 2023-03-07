@@ -124,7 +124,7 @@ func simulateProcess(original_order string) string {
 // func main() {
 // 	user_conf := global.GetConfig("../../conf/conf.ini")
 // 	gtrs := GenTradeRestfulSimulate(user_conf.UserInfo["Simulate"])
-// 	order := `{"instId": "BTC-USDT-SWAP","tdMode": "cross","posSide":"long","side": "sell","ordType": "market","sz": "100"}`
+// 	order := `{"instId": "BTC-USDT-SWAP","tdMode": "cross","posSide":"short","side": "sell","ordType": "market","sz": "100"}`
 // 	// order := `{"instId":"ETH-USDT-SWAP","posSide":"","tdMode":"cross","side":"buy","ordType":"market","sz":"1"}`
 // 	res := gtrs.SendOrder(order)
 // 	fmt.Println(res)

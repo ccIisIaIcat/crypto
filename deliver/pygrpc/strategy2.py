@@ -183,7 +183,7 @@ class strategy:
             if format_info["arg"]["channel"] == "orders":
                 # 处理订单
                 for order_respon in format_info["data"]:
-                    if order_respon["side"] == "buy":
+                    if order_respon["state"] == "buy":
                         # 开仓成功记录持仓
                         if order_respon["clOrdId"] in self.order_record:
                             temp_position = {"clOrdId":order_respon["clOrdId"],"posSide":order_respon["posSide"],"avgPx":order_respon["avgPx"],"fillTime":order_respon["fillTime"],"fee":order_respon["fee"]}

@@ -223,6 +223,40 @@ def genhourbarCustom(strategy,bardf:BarinfoArray,end_min:str):
             tempbar.VolCcy = bardf.df["VolCcy"][-length:].sum()
             tempbar.VolCcyQuote = bardf.df["VolCcyQuote"][-length:].sum()
             strategy.GenHourBarCustom(tempbar)
+            
+# 调用该方法时，策略必须声明GenHourBarCustom方法和hour_bar_calculation对象
+def genhourbarCustomQuick(strategy,bardf:BarinfoArray,end_min:str):
+    last_series = bardf.df.iloc[-1]
+    length = 60
+    if strategy.hour_bar_calculation[last_series["Insid"]]["time_start"] == 0:
+        strategy.hour_bar_calculation[last_series["Insid"]]["time_start"] = int(last_series["TS_open"])
+        strategy.hour_bar_calculation[last_series["Insid"]]["Open_price"] = float(last_series["Open_price"])
+    strategy.hour_bar_calculation[last_series["Insid"]]["Close_price"] = float(last_series["Close_price"])
+    if float(last_series["High_price"]) > strategy.hour_bar_calculation[last_series["Insid"]]["High_price"]:
+        strategy.hour_bar_calculation[last_series["Insid"]]["High_price"] = float(last_series["High_price"])
+    if float(last_series["Low_price"]) < strategy.hour_bar_calculation[last_series["Insid"]]["Low_price"]:
+        strategy.hour_bar_calculation[last_series["Insid"]]["Low_price"] = float(last_series["Low_price"])
+    strategy.hour_bar_calculation[last_series["Insid"]]["Vol"] += float(last_series["Vol"])
+    strategy.hour_bar_calculation[last_series["Insid"]]["VolCcy"] += float(last_series["VolCcy"])
+    strategy.hour_bar_calculation[last_series["Insid"]]["VolCcyQuote"] += float(last_series["VolCcyQuote"])
+        
+    if str(time.localtime(float(last_series["TS_open"])/1000).tm_min) == end_min:
+        if (last_series["TS_open"]-strategy.hour_bar_calculation[last_series["Insid"]]["time_start"])/1000/60 + 1 == length:
+            tempbar = barinfo()
+            tempbar.InsID = last_series["Insid"]
+            tempbar.TS_open = strategy.hour_bar_calculation[last_series["Insid"]]["time_start"]
+            tempbar.Open_price = strategy.hour_bar_calculation[last_series["Insid"]]["Open_price"]
+            tempbar.High_price = strategy.hour_bar_calculation[last_series["Insid"]]["High_price"]
+            tempbar.Low_price = strategy.hour_bar_calculation[last_series["Insid"]]["Low_price"]
+            tempbar.Close_price = strategy.hour_bar_calculation[last_series["Insid"]]["Close_price"]
+            tempbar.Vol = strategy.hour_bar_calculation[last_series["Insid"]]["Vol"]
+            tempbar.VolCcy = strategy.hour_bar_calculation[last_series["Insid"]]["VolCcy"]
+            tempbar.VolCcyQuote = strategy.hour_bar_calculation[last_series["Insid"]]["VolCcyQuote"]
+            strategy.hour_bar_calculation[last_series["Insid"]] = {"time_start":0,"Open_price":0,"High_price":0,"Low_price":float('+inf'),"Close_price":0,"Vol":0,"VolCcy":0,"VolCcyQuote":0}
+            strategy.GenHourBarCustom(tempbar)
+        elif (last_series["TS_open"]-strategy.hour_bar_calculation[last_series["Insid"]]["time_start"])/1000/60 + 1 < length:
+            strategy.hour_bar_calculation[last_series["Insid"]] = {"time_start":0,"Open_price":0,"High_price":0,"Low_price":float('+inf'),"Close_price":0,"Vol":0,"VolCcy":0,"VolCcyQuote":0}
+
     
 # 调用此方法的strategy必须包含UpdateBarCustom方法
 def Load1MBarFromLocalMysql(strategy,user,password,database,Insid,length=0):

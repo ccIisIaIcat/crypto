@@ -2,7 +2,6 @@ package deliver_server
 
 import (
 	"context"
-	"fmt"
 	"global"
 	deliver "godeliver"
 	"log"
@@ -54,14 +53,14 @@ func (T *Tick_deliver) starttick(tickport string) {
 	defer cancel()
 	for {
 		tickinfo := <-T.query_tick.Tick_info_chan
-		fmt.Println(tickinfo)
+		// fmt.Println(tickinfo)
 		// 调用BarDataReceiver接口，发送条消息
-		response, err := c.TickDataReceiver(ctx, T.CopyTick(tickinfo))
+		_, err := c.TickDataReceiver(ctx, T.CopyTick(tickinfo))
 		if err != nil {
 			log.Println(err)
 			T.Signal = true
 		}
-		log.Println(response)
+		// log.Println(response)
 	}
 }
 
