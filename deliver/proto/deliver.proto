@@ -54,6 +54,7 @@ message LocalSubmit{
     string tickPort = 5;   // tick数据的传送端口
     string barPort = 6;   // bar数据的传送端口
     string accountPort = 7; // 账户相关传送接口
+    string strategyname = 8;
 }
 
 message Order{

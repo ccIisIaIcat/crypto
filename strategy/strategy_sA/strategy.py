@@ -120,7 +120,7 @@ class strategy:
             if not self.trade_forbidden_signal: 
                 # 当tick的ask小于下方布林带时,做多
                 if list(self.tick_list.df["Ask1_price"])[-1] < self.bolling_down[-1]:
-                    self.trade_df.loc[len(self.trade_df)] = [list(self.tick_list.df["Ts_open"])[-1],"get_signal","long"]
+                    self.trade_df.loc[len(self.trade_df)] = [list(self.tick_list.df["Ts_Price"])[-1],"get_signal","long"]
                     self.trade_df.to_csv("../trade_record.csv",index=False)
                 # if self.test_a == 30 :
                     # 如果没有仓位，开仓
@@ -154,7 +154,7 @@ class strategy:
                 # 当tick的bid大于上方布林带时,做空
                 if list(self.tick_list.df["Bid1_price"])[-1] > self.bolling_up[-1]:
                     # if self.test_a == 180 :
-                    self.trade_df.loc[len(self.trade_df)] = [list(self.tick_list.df["Ts_open"])[-1],"get_signal","short"]
+                    self.trade_df.loc[len(self.trade_df)] = [list(self.tick_list.df["Ts_Price"])[-1],"get_signal","short"]
                     self.trade_df.to_csv("../trade_record.csv",index=False)
                     # 如果没有仓位，开空
                     if len(self.position_record) == 0:
