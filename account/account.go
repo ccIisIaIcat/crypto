@@ -16,7 +16,7 @@ type Account struct {
 	InfoChanOrders    chan []byte
 	InfoChanPositions chan []byte
 	// private
-	ws             *websocketlocal.WebSocketLocal
+	ws             *websocketlocal.WebSocketLocalUser
 	userconf       global.ConfigUser
 	accountsignal  bool
 	orderssiganl   bool
@@ -40,9 +40,9 @@ func GenAccount(userconf global.ConfigUser, account_sub bool, order_sub bool, po
 	ac.orderssiganl = order_sub
 	ac.positiossignal = position_sub
 	if simulate_api {
-		ac.ws = websocketlocal.GenWebSocket("wss://wspap.okx.com:8443/ws/v5/private?brokerId=9999", 10)
+		ac.ws = websocketlocal.GenWebSocketUser("wss://wspap.okx.com:8443/ws/v5/private?brokerId=9999", 10, userconf)
 	} else {
-		ac.ws = websocketlocal.GenWebSocket("wss://ws.okx.com:8443/ws/v5/private", 10)
+		ac.ws = websocketlocal.GenWebSocketUser("wss://ws.okx.com:8443/ws/v5/private", 10, userconf)
 	}
 	ac.userconf = userconf
 	ac.stop_signal = sync.Map{}
