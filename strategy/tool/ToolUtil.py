@@ -119,8 +119,8 @@ class barinfo:
     # TS_NextFundingRate = 0
     def __init__(self,bar_info=""):
         if not isinstance(bar_info,Iterable):
-            self.InsID =  bar_info.Insid 
-            self.TS_open = bar_info.Ts_open
+            self.InsID =  bar_info.InsID 
+            self.TS_open = bar_info.TS_open
             self.Open_price = bar_info.Open_price
             self.High_price = bar_info.High_price
             self.Low_price = bar_info.Low_price
@@ -154,8 +154,12 @@ class BarinfoArray():
         self.Symbol = Insid
         self.max_length = max_length
         self.df = pd.DataFrame(columns=["Insid","TS_open","Open_price","High_price","Low_price","Close_price","Vol","VolCcy","VolCcyQuote"])
-
-    def add(self,value:barinfo):
+    def Store(self,bar_info):
+        if isinstance(bar_info,Iterable):
+            self._addnum(bar_info)
+        else:
+            self._add(barinfo(bar_info))
+    def _add(self,value:barinfo):
         if self.Symbol == "":
             self.Symbol = value.InsID
         if value.InsID != self.Symbol:
@@ -168,12 +172,38 @@ class BarinfoArray():
             self.Array = self.Array[1:]
             self.df.drop(0,inplace=True)
             self.df.reset_index(inplace=True,drop=True)
-    def addnum(self,value):
+    def _addnum(self,value):
         # print(value)
         self.df.loc[len(self.df)] = value
         self.Array.append(barinfo(self.df.loc[len(self.df)-1]))
-    def getlength(self):
+    def Getlength(self):
         return len(self.df)
+    def GetInsId(self):
+        return self.Symbol
+    def GetTsByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["TS_open"].tail(limit)).astype("int")
+    def GetOpenPriceByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Open_price"].tail(limit)).astype("float")
+    def GetHighPriceByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["High_price"].tail(limit)).astype("float")
+    def GetLowPriceByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Low_price"].tail(limit)).astype("float")
+    def GetClosePriceByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Close_price"].tail(limit)).astype("float")
+    def GetVolByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Vol"].tail(limit)).astype("float")
 
 class TickinfoArray():
     Array = []
@@ -185,7 +215,13 @@ class TickinfoArray():
         self.max_length = max_length
         self.df = pd.DataFrame(columns=["Insid","Ts_Price","Ask1_price","Bid1_price","Ask1_volumn","Bid1_volumn"])
     
-    def add(self,value:tickinfo):
+    def Store(self,tick_info):
+        if isinstance(tick_info,Iterable):
+            self._addnum(tick_info)
+        else:
+            self._add(tickinfo(tick_info))
+    
+    def _add(self,value:tickinfo):
         if self.Symbol == "":
             self.Symbol = value.Insid
         if value.Insid != self.Symbol:
@@ -201,11 +237,34 @@ class TickinfoArray():
             self.df.reset_index(inplace=True,drop=True)
             # a2 = datetime.datetime.now()
             # print((a2-a1).microseconds)
-    def addnum(self,value):
+    def _addnum(self,value):
         self.df.loc[len(self.df)] = value
         self.Array.append(tickinfo(self.df.loc[len(self.df)-1]))
-    def getlength(self):
+    def Getlength(self):
         return len(self.df)
+    def GetInsid(self):
+        return self.Symbol
+    def GetTsByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Ts_Price"].tail(limit)).astype("int")
+    def GetAsk1PriceByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Ask1_price"].tail(limit)).astype("float")
+    def GetBid1PriceByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Bid1_price"].tail(limit)).astype("float")
+    def GetAsk1volumnByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Ask1_volumn"].tail(limit)).astype("float")
+    def GetBid1volumnByTail(self,limit:int):
+        if limit > len(self.df):
+            limit = len(self.df)
+        return np.array(self.df["Bid1_volumn"].tail(limit)).astype("float")
+    
 
 # 调用该方法时，策略必须声明GenHourBarCustom方法
 def genhourbarCustom(strategy,bardf:BarinfoArray,end_min:str):

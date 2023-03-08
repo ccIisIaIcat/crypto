@@ -171,6 +171,7 @@ func (W *WebSocketLocalUser) restartWebsocket() {
 		json.Unmarshal([]byte(W.subcribeInfo[i]), &temp)
 		if temp["op"] == "login" {
 			W.Submit([]byte(W.updateLogin()), false)
+			time.Sleep(time.Second * 2)
 		} else {
 			W.Submit([]byte(W.subcribeInfo[i]), false)
 		}

@@ -97,19 +97,14 @@ class strategy:
     
     def UpdateBarCustom(self,bar_info):
         # 更新本地bar列表
-        if isinstance(bar_info,Iterable):
-            self.bar_list.addnum(bar_info)
-        else:
-            self.bar_list.add(TU.barinfo(bar_info))
+        self.bar_list.Store(bar_info)
         # 声明自定义bar方法，声明该方法时策略结构体必须包含GenHourBarCustom的类内函数
         TU.genhourbarCustom(self,self.bar_list,"59")
     
     def UpdateTick(self,tick_info):
         # 更新本地tick列表
-        if isinstance(tick_info,Iterable):
-            self.tick_list.addnum(tick_info)
-        else:
-            self.tick_list.add(TU.tickinfo(tick_info))
+        self.tick_list.Store(tick_info)
+        print(self.tick_list.df)
         # 测试用
         # self.test_a += 1
         # print(self.test_a)
@@ -188,9 +183,9 @@ class strategy:
                             self.order_record[odt_short.clOrdId] = 1
                             
     def GenHourBarCustom(self,bar_info):
-        self.bar_hour_list.add(bar_info)
+        self.bar_hour_list.Store(bar_info)
         # 小时bar个数大于等于MA均线要求长度，生成MA
-        if self.bar_hour_list.getlength() >= self.MA_length:
+        if self.bar_hour_list.Getlength() >= self.MA_length:
             temp_list = list(self.bar_hour_list.df["Close_price"])[-self.MA_length:]
             self.MA_hour.append(np.mean(temp_list))
             std = np.std(temp_list,ddof=1)
