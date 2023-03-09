@@ -55,6 +55,14 @@ func GenWebSocketUser(address string, timecounter int, userconf global.ConfigUse
 			log.Println("websocket handle successed!")
 			break
 		}
+		// ws.conn.SetWriteDeadline(time.Now().Add(30 * time.Second))
+		// err := conn.WriteMessage(ws.BinaryMessage, frame)
+		// if err != nil {
+		// 	log.Println("write err:", err.Error())
+		// 	return
+		// }
+		// conn.SetWriteDeadline(time.Time{})
+
 	}
 	if err != nil {
 		panic(err)

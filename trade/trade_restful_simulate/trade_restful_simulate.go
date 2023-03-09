@@ -4,7 +4,6 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"global"
 	"io"
 	"log"
@@ -43,7 +42,7 @@ func (T *TradeRestfulSimulate) GenSign(method string, requestPath string, body s
 }
 
 func (T *TradeRestfulSimulate) SendOrder(body string) string {
-	body = simulateProcess(body)
+	// body = simulateProcess(body)
 	reqest, err := http.NewRequest("POST", T.baseurl+"/api/v5/trade/order", strings.NewReader(body))
 	if err != nil {
 		log.Println("请求错误")
@@ -103,23 +102,23 @@ func (T *TradeRestfulSimulate) ChangeLeverage(InsId string, leverage string, mgn
 }
 
 // 模拟交易时的swap订单没有posSide选项，使对饮字符段为空并根据long、short确定side字段
-func simulateProcess(original_order string) string {
-	var temp map[string]interface{}
-	json.Unmarshal([]byte(original_order), &temp)
-	if temp["instId"].(string)[len(temp["instId"].(string))-4:] == "SWAP" {
-		if temp["posSide"].(string) == "long" {
-			temp["posSide"] = ""
-			temp["side"] = "buy"
-		} else {
-			temp["posSide"] = ""
-			temp["side"] = "sell"
-		}
-	} else {
-		return original_order
-	}
-	an, _ := json.Marshal(temp)
-	return string(an)
-}
+// func simulateProcess(original_order string) string {
+// 	var temp map[string]interface{}
+// 	json.Unmarshal([]byte(original_order), &temp)
+// 	if temp["instId"].(string)[len(temp["instId"].(string))-4:] == "SWAP" {
+// 		if temp["posSide"].(string) == "long" {
+// 			temp["posSide"] = ""
+// 			temp["side"] = "buy"
+// 		} else {
+// 			temp["posSide"] = ""
+// 			temp["side"] = "sell"
+// 		}
+// 	} else {
+// 		return original_order
+// 	}
+// 	an, _ := json.Marshal(temp)
+// 	return string(an)
+// }
 
 // func main() {
 // 	user_conf := global.GetConfig("../../conf/conf.ini")

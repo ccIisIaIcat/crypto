@@ -36,7 +36,7 @@ func GenInfoDeliver(submitserver_port string, orderserver_port string, userconfi
 func (I *InfoDeliver) Start(pingpong_timeout int) {
 	I.orderserver = &deliver_server.OrderServer{}
 	go I.orderserver.OrderServerListen(I.orderserver_port, I.userconfig, I.simulate)
-	submitserver := deliver_server.SubmitServer{}
+	submitserver := deliver_server.SubmitServer{Userconf: I.userconfig, Simulate: I.simulate}
 	go submitserver.SubmitServerListen(I.submitserver_port)
 	go I.OrderResDeliver()
 	fmt.Println("server starting")

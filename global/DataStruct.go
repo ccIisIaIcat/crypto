@@ -122,3 +122,16 @@ type submitAccount struct {
 	Port          string
 	Userconf      ConfigUser
 }
+
+// 当前所需信息：ctVal合约面值，ctMult合约乘数，ctValCcy合约面值计价货币，tickSz下单价格精度，lotSz下单数量精度，minSz最小下单数量，maxLmtSz合约或现货限价单的单笔最大委托数量,maxMktSz合约或现货市价单的单笔最大委托数量
+type InsidBasicInfo struct {
+	InsId    string `json:"Insid"`    // 合约名称
+	CtVal    string `json:"ctVal"`    // 合约面值
+	CtMult   string `json:"ctMult"`   // 合约乘数
+	CtValCcy string `json:"ctValCcy"` // 合约面值计价货币，
+	TickSz   string `json:"tickSz"`   // 下单价格精度
+	LotSz    string `json:"lotSz"`    // 下单数量精度
+	MinSz    string `json:"minSz"`    // 最小下单数量
+	MaxLmtSz string `json:"maxLmtSz"` // 合约或现货限价单的单笔最大委托数量
+	MaxMktSz string `json:"maxMktSz"` // 合约或现货市价单的单笔最大委托数量
+}

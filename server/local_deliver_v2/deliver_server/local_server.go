@@ -1,10 +1,14 @@
 package deliver_server
 
 import (
+	"account"
 	"context"
+	"encoding/json"
+	"global"
 	deliver "godeliver"
 	"log"
 	"net"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -14,10 +18,46 @@ import (
 type SubmitServer struct {
 	deliver.UnimplementedSubmitServerReceiverServer
 	InfoChan chan *deliver.LocalSubmit
+	Userconf global.ConfigUser
+	Simulate bool
 }
 
 func (S *SubmitServer) SubmitServerReceiver(ctx context.Context, submit *deliver.LocalSubmit) (*deliver.Response, error) {
 	S.InfoChan <- submit
+	// 后续在此处添加对api初始化的回执
+	if submit.Initjson != "" {
+		temp_acc := account.GenAccountConf(S.Userconf, S.Simulate)
+		var temp map[string]interface{}
+		json.Unmarshal([]byte(submit.Initjson), &temp)
+		temp_acc.SetPositionMode(temp["TradingMode"].(string))
+		for k, v := range temp["LeverageSet"].(map[string]interface{}) {
+			temp_list := strings.Split(k, " ")
+			if len(temp_list) == 2 {
+				temp_acc.SetLeverage(temp_list[0], v.(string), temp_list[1])
+			} else {
+				temp_acc.SetLeverage(temp_list[0], v.(string), "cross")
+			}
+		}
+		if temp["TradingInsid"].(string) != "" {
+			temp_list := strings.Split(temp["TradingInsid"].(string), " ")
+			if len(strings.Split(temp_list[0], "-")) == 2 {
+				respon_json := temp_acc.GetInsIdInfo("SWAP", strings.Split(temp["TradingInsid"].(string), " "))
+				temp := &deliver.Response{ResponseMe: string(respon_json)}
+				return temp, nil
+			} else {
+				if strings.Split(temp_list[0], "-")[2] == "SWAP" {
+					respon_json := temp_acc.GetInsIdInfo("SWAP", strings.Split(temp["TradingInsid"].(string), " "))
+					temp := &deliver.Response{ResponseMe: string(respon_json)}
+					return temp, nil
+				} else {
+					respon_json := temp_acc.GetInsIdInfo("FUTURES", strings.Split(temp["TradingInsid"].(string), " "))
+					temp := &deliver.Response{ResponseMe: string(respon_json)}
+					return temp, nil
+				}
+			}
+		}
+
+	}
 	temp := &deliver.Response{ResponseMe: "Get"}
 	return temp, nil
 }

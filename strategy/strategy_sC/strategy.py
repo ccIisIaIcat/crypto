@@ -3,7 +3,7 @@ import os
 __dir__ = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, '..')))
-from strategy_template import strtegyBasic
+from strategy_template import strategyBasic
 from tool import ToolUtil as TU
 from pygrpc import pyserver
 from orderTP import orderSA
@@ -19,7 +19,7 @@ odt_short = orderSA.sim_sell
 
 
 
-class strategySc(strtegyBasic.strategy):
+class strategySc(strategyBasic.strategy):
      # 策略对象
     MA_hour = [] # 小时bar的MA均线
     Std_hour = [] # 小时bar对应MA的std
@@ -55,7 +55,6 @@ class strategySc(strtegyBasic.strategy):
         # 声明自定义bar方法，声明该方法时策略结构体必须包含GenHourBarCustom的类内函数
         TU.genhourbarCustom(self,self.bar_list,"59")
 
-        pass
     
     def GenHourBarCustom(self,bar_info):
         self.bar_hour_list.Store(bar_info)
@@ -87,17 +86,11 @@ class strategySc(strtegyBasic.strategy):
                     # 如果没有仓位，开仓
                     if len(self.position_record) == 0:
                         odt_long.sz = "1"
-                        odt_long.slTriggerPx = str(self.bar_hour_list.GetClosePriceByTail(1)[0]*(1-self.stop_lose_ratio))
-                        odt_long.slOrdPx = "-1"
-                        odt_long.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_long)
                         self.order_record[odt_long.clOrdId] = 1
                     elif self.position_record[0]["posSide"] == "short":
                         odt_long.sz = "2"
-                        odt_long.slTriggerPx = str(self.bar_hour_list.GetClosePriceByTail(1)[0]*(1-self.stop_lose_ratio))
-                        odt_long.slOrdPx = "-1"
-                        odt_long.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_long)
                         self.order_record[odt_long.clOrdId] = 1
@@ -106,88 +99,91 @@ class strategySc(strtegyBasic.strategy):
                      # 如果没有仓位，开空
                     if len(self.position_record) == 0:
                         odt_short.sz = "1"
-                        odt_short.slTriggerPx = str(self.bar_hour_list.GetClosePriceByTail(1)[0]*(1+self.stop_lose_ratio))
-                        odt_short.slOrdPx = "-1"
-                        odt_short.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
                     # 如果持有空仓，平多，开空
                     elif self.position_record[0]["posSide"] == "long":
                         odt_short.sz = "2"
-                        odt_short.slTriggerPx = str(self.bar_hour_list.GetClosePriceByTail(1)[0]*(1+self.stop_lose_ratio))
-                        odt_short.slOrdPx = "-1"
-                        odt_short.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
-        
         
     def UpdateTick(self,tick_info):
         self.tick_list.Store(tick_info)
         # print(self.tick_list.GetAsk1PriceByTail(10))
         # print("/////////",self.tick_list.GetAsk1PriceByTail(1)[0])
         
-        # 测试用
+        # # 测试用
         self.test_a += 1
         print(self.test_a)
         print(self.order_record)
         print(self.position_record)
         print(self.trade_forbidden_signal)
         
-        # if len(self.basic_signal) > 0 and self.basic_signal[-1]<self.basic_signal_threshold:
-        if  self.test_a == 30 or self.test_a == 180:
+        if len(self.basic_signal) > 0 and self.basic_signal[-1]<self.basic_signal_threshold:
+        # if  self.test_a == 30 or self.test_a == 180:
             if not self.trade_forbidden_signal: 
                 # 当tick的ask小于下方布林带时,做多
-                if self.test_a == 30 :
-                # if self.tick_list.GetAsk1PriceByTail(1)[0] < self.bolling_down[-1]:
+                # if self.test_a == 30 :
+                if self.tick_list.GetAsk1PriceByTail(1)[0] < self.bolling_down[-1]:
                     # self.trade_df.loc[len(self.trade_df)] = [self.tick_list.GetTsByTail(1)[0],"get_signal","long"]
                     # self.trade_df.to_csv("../trade_record.csv",index=False)
                     # 如果没有仓位，开仓
                     if len(self.position_record) == 0:
                         odt_long.sz = "1"
-                        odt_long.slTriggerPx = str(self.tick_list.GetAsk1PriceByTail(1)[-1]*(1-self.stop_lose_ratio))
-                        odt_long.slOrdPx = "-1"
-                        odt_long.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         print(odt_long.genOrder())
                         self.Makeorder(odt_long)
                         self.order_record[odt_long.clOrdId] = 1
                     elif self.position_record[0]["posSide"] == "short":
                         odt_long.sz = "2"
-                        odt_long.slTriggerPx = str(self.tick_list.GetAsk1PriceByTail(1)[0]*(1-self.stop_lose_ratio))
-                        odt_long.slOrdPx = "-1"
-                        odt_long.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         res = self.Makeorder(odt_long)
                         self.order_record[odt_long.clOrdId] = 1
                         
                 # 当tick的bid大于上方布林带时,做空
-                # if self.tick_list.GetBid1PriceByTail(1)[-1] > self.bolling_up[-1]:
-                if self.test_a == 180 :
+                if self.tick_list.GetBid1PriceByTail(1)[-1] > self.bolling_up[-1]:
+                # if self.test_a == 180 :
                     self.trade_df.loc[len(self.trade_df)] = [self.tick_list.GetTsByTail(1)[0],"get_signal","long"]
                     self.trade_df.to_csv("../trade_record.csv",index=False)
                     # 如果没有仓位，开空
                     if len(self.position_record) == 0:
                         odt_short.sz = "1"
-                        odt_short.slTriggerPx = str(self.tick_list.GetBid1PriceByTail(1)[0]*(1+self.stop_lose_ratio))
-                        odt_short.slOrdPx = "-1"
-                        odt_short.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
                     # 如果持有空仓，平多，开空
                     elif self.position_record[0]["posSide"] == "long":
                         odt_short.sz = "2"
-                        odt_short.slTriggerPx = str(self.tick_list.GetBid1PriceByTail(1)[0]*(1+self.stop_lose_ratio))
-                        odt_short.slOrdPx = "-1"
-                        odt_short.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
+                        
+        # 止盈止损判断
+        if len(self.position_record) > 0:
+            # 多头止损判断
+            if self.position_record[0]["posSide"] == "long":
+                price = float(self.position_record[0]["accFillSz"])
+                # 触发止损
+                if self.tick_list.GetAsk1PriceByTail(1)[0]*(1-self.stop_lose_ratio) < price:
+                    # 平多
+                    odt_short.sz = "1"
+                    self.trade_forbidden_signal = True
+                    self.Makeorder(odt_short)
+                    self.order_record[odt_short.clOrdId] = 1
+            # 空头止损判断
+            if self.position_record[0]["posSide"] == "short":
+                price = float(self.position_record[0]["accFillSz"])
+                if self.tick_list.GetBid1PriceByTail(1)[0]*(1+self.stop_lose_ratio) > price:
+                    # 平空
+                    odt_short.sz = "1"
+                    self.trade_forbidden_signal = True
+                    self.Makeorder(odt_short)
+                    self.order_record[odt_short.clOrdId] = 1
         
     def LoadData(self):
-        TU.Load1MBarFromLocalMysql(self,"root","","crypto_swap","ETH-USDT-SWAP",5000)
+        TU.Load1MBarFromLocalMysql(self,"root","zwj12345","crypto_swap","ETH-USDT-SWAP",5000)
         pass
     
     # def UpdateAccount(self, account_info):
