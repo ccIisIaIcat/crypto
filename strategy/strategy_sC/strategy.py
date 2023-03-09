@@ -30,7 +30,7 @@ class strategySc(strategyBasic.strategy):
     bolling_up = [] # 当前布林带的上方
     bolling_down = [] # 当前布林带的下方
     # 对于小时bar信号的数据的记录
-    trade_df = pd.DataFrame(columns=["time","side","sz"])
+    trade_df = pd.DataFrame(columns=["judge","Insid","pos","posSide","avgPx","cTime","uTime","clOrdId_list"])
     
     # 策略参数
     MA_length = 20 # MA均线长度
@@ -46,8 +46,11 @@ class strategySc(strategyBasic.strategy):
     tick_list = TU.TickinfoArray(Insid="ETH-USDT-SWAP",max_length=10)
     bar_list = TU.BarinfoArray(Insid="ETH-USDT-SWAP")
     bar_hour_list = TU.BarinfoArray(Insid="ETH-USDT-SWAP")
-    
-    test_a = 0
+    # 声明仓位对象
+    ETH_USDT_position = TU.position(Insid="ETH-USDT-SWAP")
+
+    # 测试用
+    # test_a = 0
     
     def UpdateBarCustom(self,bar_info):
         # 更新本地bar列表
@@ -84,12 +87,12 @@ class strategySc(strategyBasic.strategy):
                 # 当当前bar的close大于上bolling up时，做多
                 if self.bar_hour_list.GetClosePriceByTail(1)[0] > self.bolling_up[-1]:
                     # 如果没有仓位，开仓
-                    if len(self.position_record) == 0:
+                    if not self.ETH_USDT_position.judge:
                         odt_long.sz = "1"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_long)
                         self.order_record[odt_long.clOrdId] = 1
-                    elif self.position_record[0]["posSide"] == "short":
+                    elif self.ETH_USDT_position.posSide == "short":
                         odt_long.sz = "2"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_long)
@@ -97,13 +100,13 @@ class strategySc(strategyBasic.strategy):
             # 当当前bar的close小于bolling down时，做空
                 if self.bar_hour_list.GetClosePriceByTail(1)[0] < self.bolling_down[-1]:
                      # 如果没有仓位，开空
-                    if len(self.position_record) == 0:
+                    if not self.ETH_USDT_position.judge:
                         odt_short.sz = "1"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
                     # 如果持有空仓，平多，开空
-                    elif self.position_record[0]["posSide"] == "long":
+                    elif self.ETH_USDT_position.posSide == "long":
                         odt_short.sz = "2"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
@@ -115,10 +118,10 @@ class strategySc(strategyBasic.strategy):
         # print("/////////",self.tick_list.GetAsk1PriceByTail(1)[0])
         
         # # 测试用
-        self.test_a += 1
-        print(self.test_a)
+        # self.test_a += 1
+        # print(self.test_a)
         print(self.order_record)
-        print(self.position_record)
+        print(self.ETH_USDT_position.GenInfo())
         print(self.trade_forbidden_signal)
         
         if len(self.basic_signal) > 0 and self.basic_signal[-1]<self.basic_signal_threshold:
@@ -127,16 +130,14 @@ class strategySc(strategyBasic.strategy):
                 # 当tick的ask小于下方布林带时,做多
                 # if self.test_a == 30 :
                 if self.tick_list.GetAsk1PriceByTail(1)[0] < self.bolling_down[-1]:
-                    # self.trade_df.loc[len(self.trade_df)] = [self.tick_list.GetTsByTail(1)[0],"get_signal","long"]
-                    # self.trade_df.to_csv("../trade_record.csv",index=False)
                     # 如果没有仓位，开仓
-                    if len(self.position_record) == 0:
+                    if not self.ETH_USDT_position.judge:
                         odt_long.sz = "1"
                         self.trade_forbidden_signal = True
                         print(odt_long.genOrder())
                         self.Makeorder(odt_long)
                         self.order_record[odt_long.clOrdId] = 1
-                    elif self.position_record[0]["posSide"] == "short":
+                    elif self.ETH_USDT_position.posSide == "short":
                         odt_long.sz = "2"
                         self.trade_forbidden_signal = True
                         res = self.Makeorder(odt_long)
@@ -145,45 +146,44 @@ class strategySc(strategyBasic.strategy):
                 # 当tick的bid大于上方布林带时,做空
                 if self.tick_list.GetBid1PriceByTail(1)[-1] > self.bolling_up[-1]:
                 # if self.test_a == 180 :
-                    self.trade_df.loc[len(self.trade_df)] = [self.tick_list.GetTsByTail(1)[0],"get_signal","long"]
-                    self.trade_df.to_csv("../trade_record.csv",index=False)
                     # 如果没有仓位，开空
-                    if len(self.position_record) == 0:
+                    if not self.ETH_USDT_position.judge:
                         odt_short.sz = "1"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
                     # 如果持有空仓，平多，开空
-                    elif self.position_record[0]["posSide"] == "long":
+                    elif self.ETH_USDT_position.posSide == "long":
                         odt_short.sz = "2"
                         self.trade_forbidden_signal = True
+                        print()
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
                         
         # 止盈止损判断
-        if len(self.position_record) > 0:
+        if self.ETH_USDT_position.judge and not self.trade_forbidden_signal:
             # 多头止损判断
-            if self.position_record[0]["posSide"] == "long":
-                price = float(self.position_record[0]["accFillSz"])
+            if self.ETH_USDT_position.posSide == "long":
+                price = self.ETH_USDT_position.avgPx
                 # 触发止损
-                if self.tick_list.GetAsk1PriceByTail(1)[0]*(1-self.stop_lose_ratio) < price:
+                if self.tick_list.GetAsk1PriceByTail(1)[0] < price*(1-self.stop_lose_ratio) :
                     # 平多
-                    odt_short.sz = "1"
+                    odt_short.sz = str(int(abs(self.ETH_USDT_position.pos)))
                     self.trade_forbidden_signal = True
                     self.Makeorder(odt_short)
                     self.order_record[odt_short.clOrdId] = 1
             # 空头止损判断
-            if self.position_record[0]["posSide"] == "short":
-                price = float(self.position_record[0]["accFillSz"])
-                if self.tick_list.GetBid1PriceByTail(1)[0]*(1+self.stop_lose_ratio) > price:
+            if self.ETH_USDT_position.posSide == "short":
+                price = self.ETH_USDT_position.avgPx
+                if self.tick_list.GetBid1PriceByTail(1)[0] > price*(1+self.stop_lose_ratio):
                     # 平空
-                    odt_short.sz = "1"
+                    odt_long.sz = str(int(abs(self.ETH_USDT_position.pos)))
                     self.trade_forbidden_signal = True
-                    self.Makeorder(odt_short)
-                    self.order_record[odt_short.clOrdId] = 1
+                    self.Makeorder(odt_long)
+                    self.order_record[odt_long.clOrdId] = 1
         
     def LoadData(self):
-        TU.Load1MBarFromLocalMysql(self,"root","zwj12345","crypto_swap","ETH-USDT-SWAP",5000)
+        TU.Load1MBarFromLocalMysql(self,"root","","crypto_swap","ETH-USDT-SWAP",5000)
         pass
     
     # def UpdateAccount(self, account_info):
@@ -198,34 +198,9 @@ class strategySc(strategyBasic.strategy):
             if order_respon["state"] == "live":
                 continue
             if order_respon["state"] == "partially_filled" or order_respon["state"] == "filled":
-                self.trade_df.loc[len(self.trade_df)] = [order_respon["cTime"],order_respon["side"],order_respon["accFillSz"]]
-                self.trade_df.to_csv("../trade_record.csv",index=False)
-                if order_respon["side"] == "buy":
-                    if len(self.position_record)==0:
-                        self.position_record.append({})
-                        self.position_record[0]["posSide"] = "long"
-                        self.position_record[0]["accFillSz"] = float(order_respon["accFillSz"])
-                    else:
-                        self.position_record[0]["accFillSz"] += float(order_respon["accFillSz"])
-                        if self.position_record[0]["accFillSz"] > 0:
-                            self.position_record[0]["posSide"] = "long"
-                        elif self.position_record[0]["accFillSz"] < 0:
-                            self.position_record[0]["posSide"] = "short"
-                        else:
-                            del self.position_record[0]
-                else:
-                    if order_respon["clOrdId"] in self.position_record:
-                        self.position_record.append({})
-                        self.position_record[0]["posSide"] = "short"
-                        self.position_record[0]["accFillSz"] = float(order_respon["accFillSz"])
-                    else:
-                        self.position_record[0]["accFillSz"] -= float(order_respon["accFillSz"])
-                        if self.position_record[0]["accFillSz"] > 0:
-                            self.position_record[0]["posSide"] = "long"
-                        elif self.position_record[0]["accFillSz"] < 0:
-                            self.position_record[0]["posSide"] = "short"
-                        else:
-                            del self.position_record[0]
+                self.ETH_USDT_position.UpdatePosition(order_respon)
+                self.trade_df.loc[len(self.trade_df)] = self.ETH_USDT_position.GenInfo()
+                self.trade_df.to_csv("./trade_record.csv",index=False)
                 if order_respon["state"] == "filled":
                     if order_respon["clOrdId"] in self.order_record:
                         del self.order_record[str(order_respon["clOrdId"])]

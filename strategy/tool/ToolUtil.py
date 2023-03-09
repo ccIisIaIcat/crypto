@@ -13,15 +13,63 @@ sys.path.append(os.path.abspath(os.path.join(__dir__, '..')))
 from pygrpc import deliver_pb2
 
 class position:
+    judge:bool # 标记是否持仓(即持仓量是否为0)
     Insid = ""  # 持仓id
     pos = 0 # 持仓数量
     posSide = "" # 持仓方向
     avgPx = 0. # 平均价格
-    avgPx_sub = 0. # 方便持仓更新的计算
     cTime = "" # 建仓时间
     uTime = [] # 仓位更新时间列表
     clOrdId_list = [] # 更新该仓位的订单名称 
+    def __init__(self,Insid:str):
+        self.Insid = Insid
+        self.judge = False
+    def _reset(self):
+        self.judge = False # 标记是否持仓(即持仓量是否为0)
+        self.pos = 0 # 持仓数量
+        self.posSide = "" # 持仓方向
+        self.avgPx = 0. # 平均价格
+        self.cTime = "" # 建仓时间
+        self.uTime = [] # 仓位更新时间列表
+        self.clOrdId_list = [] # 更新该仓位的订单名称 
+    def UpdatePosition(self,order_respon):
+        if order_respon["side"] == "buy":
+            if not self.judge:
+                self.posSide = "long"
+                self.avgPx = float(order_respon["avgPx"])
+                self.pos = float(order_respon["accFillSz"])
+            else:
+                if self.pos + float(order_respon["accFillSz"]) == 0:
+                    self._reset()
+                else:
+                    self.avgPx = (self.avgPx*self.pos + float(order_respon["avgPx"])*float(order_respon["accFillSz"]))/(float(order_respon["accFillSz"])+self.pos)
+                    self.pos += float(order_respon["accFillSz"])
+                    if self.pos > 0:
+                        self.posSide = "long"
+                    else:
+                        self.posSide = "short"
+        else:
+            if not self.judge:
+                self.posSide = "short"
+                self.avgPx = float(order_respon["avgPx"])
+                self.pos = -float(order_respon["accFillSz"])
+            else:
+                if self.pos - float(order_respon["accFillSz"]) == 0:
+                    self._reset()
+                else:
+                    self.avgPx = (self.avgPx*self.pos - float(order_respon["avgPx"])*float(order_respon["accFillSz"]))/(self.pos-float(order_respon["accFillSz"]))
+                    self.pos -= float(order_respon["accFillSz"])
+                    if self.pos > 0:
+                        self.posSide = "long"
+                    else:
+                        self.posSide = "short"
+        if self.pos != 0:
+            self.judge = True
+            
+    def GenInfo(self):
+        return [self.judge,self.Insid,self.pos,self.posSide,self.avgPx,self.cTime," ".join(self.uTime)," ".join(self.clOrdId_list)]
     
+
 
 class ordertemplate:
     insId = ""

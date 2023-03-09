@@ -47,19 +47,19 @@ odt_sellshort.clOrdId = ""
 # 买多
 sim_buy = ToolUtil.ordertemplate()
 sim_buy.insId = "ETH-USDT-SWAP"
-sim_buy.posSide = "long"
+sim_buy.posSide = "net"
 sim_buy.tdMode = "cross"
 sim_buy.side = "buy"
-sim_buy.ordType = "optimal_limit_ioc"
+sim_buy.ordType = "market"
 sim_buy.sz = "1"
 sim_buy.clOrdId = ""
 # 买空
 sim_sell = ToolUtil.ordertemplate()
 sim_sell.insId = "ETH-USDT-SWAP"
-sim_sell.posSide = "short"
+sim_sell.posSide = "net"
 sim_sell.tdMode = "cross"
 sim_sell.side = "sell"
-sim_sell.ordType = "optimal_limit_ioc"
+sim_sell.ordType = "market"
 sim_sell.sz = "1"
 sim_sell.clOrdId = ""
 

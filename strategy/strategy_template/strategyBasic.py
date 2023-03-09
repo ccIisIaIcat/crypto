@@ -31,7 +31,6 @@ class strategy:
     StrategyName = "sA" # 策略名称，用于标注订单
     OrderNumber = [0] # 累加订单id，每次发送订单时OrderNumber+1
     # 持仓信息（简化起见当前策略只有一笔持仓）
-    position_record = [] # 仓位更改建议在UpdateAccount模块进行，该demo模块只记载持仓数
     order_record = {} # 未回执报单记录，只有当报单个数为0时，将trade_forbidden_signal标记为False
     trade_forbidden_signal = True # 禁止交易信号
     
