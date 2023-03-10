@@ -13,5 +13,7 @@ from tool import ToolUtil as TU
 # print(json.dumps(dict_))
 
 
-def get_list_of_dicts(name: str, surname: str) -> map[str,TU.position]:
-    return {}
+# def get_list_of_dicts(name: str, surname: str) -> map[str,TU.position]:
+#     return {}
+
+print(str(datetime.datetime.now()))

@@ -33,6 +33,8 @@ class strategy:
     # 持仓信息（简化起见当前策略只有一笔持仓）
     order_record = {} # 未回执报单记录，只有当报单个数为0时，将trade_forbidden_signal标记为False
     trade_forbidden_signal = True # 禁止交易信号
+    # 报单的本地存储
+    order_df = pd.DataFrame()
     
     def __init__(self,conf:TU.config):
         self.LoadData()
@@ -46,6 +48,7 @@ class strategy:
             self.portaccount = conf.accountPort
         self.portsubmit = conf.portsubmit
         self.portorder = conf.portorder
+        self.order_df = pd.DataFrame(columns=["insId","tdMode","ccy","clOrdId","tag","side","posSide","ordType","sz","px"])
         channel = grpc.insecure_channel('localhost:'+self.portsubmit)
         self.stub_submit = deliver_pb2_grpc.SubmitServerReceiverStub(channel)
         channel2 = grpc.insecure_channel('localhost:'+self.portorder)
@@ -64,6 +67,8 @@ class strategy:
     
     def Makeorder(self,order_info:TU.ordertemplate):
         order_info.clOrdId = self.StrategyName + TU.UpdateOrderId(self.OrderNumber)
+        self.order_df.loc[len(self.order_df)] = order_info.genInfoSimple
+        self.order_df.to_csv("./order.csv",index=False)
         response = self.stub_order.OrerRReceiver(order_info.genOrder())
         print(response.response_me)
         return order_info.clOrdId,response

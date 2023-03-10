@@ -36,7 +36,7 @@ class strategy:
     def LoadData(self):
         pass
     
-    def Makeorder(self,order_info:TU.ordertemplate,TradeInBar:bool):
+    def Makeorder(self,order_info:TU.ordertemplate,TradeInBar:bool,Position:TU.position):
         """回测信号分为两种,一种是立即成交信号,发送后立即转换为对应仓位,一种是挂单信号,等待在之后的bar内成交"""
         order_info.clOrdId = self.StrategyName + TU.UpdateOrderId(self.OrderNumber)
         if TradeInBar:
@@ -45,29 +45,9 @@ class strategy:
             self._tradeAfterBar(order_info)
         return "order placed"
     
-    
-# class position:
-#     Insid = ""  # 持仓id
-#     pos = 0 # 持仓数量
-#     posSide = "" # 持仓方向
-#     avgPx = 0. # 平均价格
-#     avgPx_sub = 0. # 方便持仓更新的计算
-#     cTime = "" # 建仓时间
-#     uTime = [] # 仓位更新时间列表
-#     clOrdId_list = [] # 更新该仓位的订单名称 
-    
-    def _tradeInBar(self,order_info:TU.ordertemplate):
-        if order_info.insId in self.position.keys():
-            if order_info.posSide == "net":
-                if order_info.side == "buy":
-                    self.position[order_info.insId].avgPx_sub += (self.position[order_info.insId].pos*self.position[order_info.insId].avgPx_sub + order_info.sz*order_info.px)/(self.position[order_info.insId].pos + order_info.sz)
-                    self.position[order_info.insId].pos += order_info.sz
-                    self.position[order_info.insId].avgPx = abs(self.position[order_info.insId].avgPx_sub)
-                else:
-                    self.position[order_info.insId].avgPx_sub += (self.position[order_info.insId].pos*self.position[order_info.insId].avgPx_sub - order_info.sz*order_info.px)/(self.position[order_info.insId].pos + order_info.sz)
-                    self.position[order_info.insId].pos += order_info.sz
-                    self.position[order_info.insId].avgPx = abs(self.position[order_info.insId].avgPx_sub)
-                self.position[order_info.insId].clOrdId_list.append(order_info.clOrdId)
+    def _tradeInBar(self,order_info:TU.ordertemplate,position:TU.position):
+        
+        pass
     
     def _tradeAfterBar(self,order_info:TU.ordertemplate):
         self.order_submit.append

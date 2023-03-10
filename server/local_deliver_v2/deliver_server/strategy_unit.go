@@ -8,11 +8,11 @@ import (
 
 type StrategyUnit struct {
 	// Public
-	BarDeliver     *Bar_deliver
-	TickDeliver    *Tick_deliver
-	AccountDeliver *Account_deliver
-	PingPongChan   chan bool
-	Submitinfo     global.SubmitInfo
+	BarDeliver      *Bar_deliver
+	TickDeliver     *Tick_deliver
+	PingPongChan    chan bool
+	Submitinfo      global.SubmitInfo
+	AccountInfoChan chan []byte
 	// Private
 	strategyName   string
 	timeout_second int
@@ -24,6 +24,7 @@ func GenStrategyUnit(strategy_name string, timeout_second int, subinfo global.Su
 	su.strategyName = strategy_name
 	su.timeout_second = timeout_second
 	su.Submitinfo = subinfo
+	su.AccountInfoChan = make(chan []byte, 100)
 	return su
 }
 
@@ -35,9 +36,6 @@ func (S *StrategyUnit) Start() {
 	if S.Submitinfo.Tick.Judge {
 		go S.TickDeliver.DeliverTick()
 	}
-	if S.Submitinfo.Account.Judge {
-		go S.AccountDeliver.DeliverAccount()
-	}
 	S.pingPong()
 }
 
@@ -48,9 +46,6 @@ func (S *StrategyUnit) Close() {
 	if S.Submitinfo.Tick.Judge {
 		S.TickDeliver.Signal = true
 	}
-	if S.Submitinfo.Account.Judge {
-		S.AccountDeliver.Signal = true
-	}
 }
 
 func (S *StrategyUnit) initDeliver() {
@@ -59,9 +54,6 @@ func (S *StrategyUnit) initDeliver() {
 	}
 	if S.Submitinfo.Tick.Judge {
 		S.TickDeliver = GenTickDeliver(S.Submitinfo.Tick.InsList, S.Submitinfo.Tick.Port)
-	}
-	if S.Submitinfo.Account.Judge {
-		S.AccountDeliver = GenAccountDeliver(S.Submitinfo.Account.Userconf, S.Submitinfo.Account.AccountJudge, S.Submitinfo.Account.OrderJudge, S.Submitinfo.Account.PositionJudge, S.Submitinfo.Account.Simulate, S.Submitinfo.Account.Port)
 	}
 }
 

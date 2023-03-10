@@ -11,6 +11,7 @@ import json
 from collections.abc import Iterable
 import pandas as pd
 import numpy as np
+import datetime
 
 # 开多
 odt_long = orderSA.sim_buy
@@ -30,6 +31,7 @@ class strategySc(strategyBasic.strategy):
     bolling_up = [] # 当前布林带的上方
     bolling_down = [] # 当前布林带的下方
     # 对于小时bar信号的数据的记录
+    signal_df = pd.DataFrame(columns=["record_time","MA","Signal"])
     trade_df = pd.DataFrame(columns=["judge","Insid","pos","posSide","avgPx","cTime","uTime","clOrdId_list"])
     
     # 策略参数
@@ -50,7 +52,7 @@ class strategySc(strategyBasic.strategy):
     ETH_USDT_position = TU.position(Insid="ETH-USDT-SWAP")
 
     # 测试用
-    # test_a = 0
+    test_a = 0
     
     def UpdateBarCustom(self,bar_info):
         # 更新本地bar列表
@@ -79,6 +81,8 @@ class strategySc(strategyBasic.strategy):
             # 当产生MA梯度平均时，计算信号指标
             self.basic_signal.append(abs(self.MA_grad_mean[-1]-self.MA_grad[-1]))
             print(self.basic_signal[-1])
+            self.signal_df.loc[len(self.signal_df)] = [str(datetime.datetime.now()),self.MA_hour[-1],self.basic_signal[-1]]
+            self.signal_df.to_csv("./signal.csv")
 
         # 当basic信号存在且大于阈值时考虑bar交易
         if len(self.basic_signal) > 0 and self.basic_signal[-1]>=self.basic_signal_threshold:
@@ -117,9 +121,9 @@ class strategySc(strategyBasic.strategy):
         # print(self.tick_list.GetAsk1PriceByTail(10))
         # print("/////////",self.tick_list.GetAsk1PriceByTail(1)[0])
         
-        # # 测试用
-        # self.test_a += 1
-        # print(self.test_a)
+        # 测试用
+        self.test_a += 1
+        print(self.test_a)
         print(self.order_record)
         print(self.ETH_USDT_position.GenInfo())
         print(self.trade_forbidden_signal)
@@ -156,7 +160,6 @@ class strategySc(strategyBasic.strategy):
                     elif self.ETH_USDT_position.posSide == "long":
                         odt_short.sz = "2"
                         self.trade_forbidden_signal = True
-                        print()
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
                         
@@ -216,7 +219,7 @@ if __name__ == '__main__':
     # 订阅对象.可选（tick,bar,account,position,order）
     my_conf.subtype = "tick order bar"
     # 策略名
-    my_conf.strategyname = "sA"
+    my_conf.strategyname = "sA1"
     # bar相关
     my_conf.barcustom = "1m"
     my_conf.barInsid = "ETH-USDT-SWAP"  # （多个品种用空格隔开）

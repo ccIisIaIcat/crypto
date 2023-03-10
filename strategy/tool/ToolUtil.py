@@ -33,6 +33,9 @@ class position:
         self.uTime = [] # 仓位更新时间列表
         self.clOrdId_list = [] # 更新该仓位的订单名称 
     def UpdatePosition(self,order_respon):
+        self.uTime.append(str(datetime.datetime.now()))
+        self.cTime = self.uTime[0]
+        self.clOrdId_list.append(order_respon["clOrdId"])
         if order_respon["side"] == "buy":
             if not self.judge:
                 self.posSide = "long"
@@ -144,6 +147,8 @@ class ordertemplate:
         if self.brokerID != "":
             temp.brokerID = self.brokerID
         return temp
+    def genInfoSimple(self):
+        return [self.insId,self.tdMode,self.ccy,self.tdMode,self.clOrdId,self.side,self.posSide,self.ordType,self.sz,self.px]
 
 class config:
     strategyname = ""
