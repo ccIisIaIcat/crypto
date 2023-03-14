@@ -66,11 +66,13 @@ class strategy:
         pass
     
     def Makeorder(self,order_info:TU.ordertemplate):
-        order_info.clOrdId = self.StrategyName + TU.UpdateOrderId(self.OrderNumber)
-        self.order_df.loc[len(self.order_df)] = order_info.genInfoSimple
-        self.order_df.to_csv("./order.csv",index=False)
-        response = self.stub_order.OrerRReceiver(order_info.genOrder())
-        print(response.response_me)
+        if order_info.cancelOrder == "":
+            order_info.clOrdId = self.StrategyName + TU.UpdateOrderId(self.OrderNumber)
+            # self.order_df.loc[len(self.order_df)] = order_info.genInfoSimple()
+            # self.order_df.to_csv("./order.csv",index=False)
+            response = self.stub_order.OrerRReceiver(order_info.genOrder())
+        else:
+            response = self.stub_order.OrerRReceiver(order_info.genOrder())
         return order_info.clOrdId,response
     
     def UpdateAccount(self,account_info):

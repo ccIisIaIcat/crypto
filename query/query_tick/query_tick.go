@@ -14,6 +14,7 @@ type QueryTick struct {
 	// public
 	InsId_list     []string
 	Tick_info_chan chan *global.TickInfo // 对外提供的chan访问接口
+	Simulate       bool
 	// private
 	local_ws         *websocketlocal.WebSocketLocal
 	local_insid_info map[string]*global.TickInfo
@@ -37,7 +38,11 @@ func (Q *QueryTick) init() {
 	Q.stop_signal = sync.Map{}
 	Q.stop_signal.Store("stop", false)
 	Q.Tick_info_chan = make(chan *global.TickInfo, 1000)
-	Q.local_ws = websocketlocal.GenWebSocket("wss://ws.okx.com:8443/ws/v5/public", 10)
+	if Q.Simulate {
+		Q.local_ws = websocketlocal.GenWebSocket("wss://wspap.okx.com:8443/ws/v5/public?brokerId=9999", 10)
+	} else {
+		Q.local_ws = websocketlocal.GenWebSocket("wss://ws.okx.com:8443/ws/v5/public", 10)
+	}
 }
 
 // 对对应信息进行订阅(订阅bar信息)

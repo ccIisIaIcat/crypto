@@ -16,14 +16,16 @@ type StrategyUnit struct {
 	// Private
 	strategyName   string
 	timeout_second int
+	simulate       bool
 }
 
-func GenStrategyUnit(strategy_name string, timeout_second int, subinfo global.SubmitInfo, PingPongChan chan bool) *StrategyUnit {
+func GenStrategyUnit(strategy_name string, timeout_second int, subinfo global.SubmitInfo, PingPongChan chan bool, simulate bool) *StrategyUnit {
 	su := &StrategyUnit{}
 	su.PingPongChan = PingPongChan
 	su.strategyName = strategy_name
 	su.timeout_second = timeout_second
 	su.Submitinfo = subinfo
+	su.simulate = simulate
 	su.AccountInfoChan = make(chan []byte, 100)
 	return su
 }
@@ -50,10 +52,10 @@ func (S *StrategyUnit) Close() {
 
 func (S *StrategyUnit) initDeliver() {
 	if S.Submitinfo.Bar.Judge {
-		S.BarDeliver = GenBarDeliver(S.Submitinfo.Bar.InsList, S.Submitinfo.Bar.Port, S.Submitinfo.Bar.Custom_type)
+		S.BarDeliver = GenBarDeliver(S.Submitinfo.Bar.InsList, S.Submitinfo.Bar.Port, S.Submitinfo.Bar.Custom_type, S.simulate)
 	}
 	if S.Submitinfo.Tick.Judge {
-		S.TickDeliver = GenTickDeliver(S.Submitinfo.Tick.InsList, S.Submitinfo.Tick.Port)
+		S.TickDeliver = GenTickDeliver(S.Submitinfo.Tick.InsList, S.Submitinfo.Tick.Port, S.simulate)
 	}
 }
 

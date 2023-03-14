@@ -11,7 +11,7 @@ import (
 func main() {
 	conf := global.GetConfig("../../conf/conf.ini")
 	// swap_insid := query_insid.GetInsByType("SWAP")
-	swap_insid := []string{"BTC-USDT-SWAP", "ETH-USDT-SWAP", "LUNA-USDT-SWAP"}
+	swap_insid := []string{"BTC-USDT-SWAP", "ETH-USDT-SWAP", "LUNA-USDT-SWAP", "OKB-USDT-SWAP", "OKT-USDT-SWAP", "LTC-USDT-SWAP", "DOT-USDT-SWAP", "DOGE-USDT-SWAP", "ADA-USDT-SWAP", "XRP-USDT-SWAP"}
 	ms := record_mysql.GenMysqlServer(conf.MysqlInfo["Local2"], "crypto_swap_depth_5")
 
 	table_sql := "(id int PRIMARY KEY AUTO_INCREMENT, Insid varchar(100), Ts bigint, A1p double, A2p double, A3p double, A4p double, A5p double,A1q double, A2q double, A3q double, A4q double, A5q double, B1p double, B2p double, B3p double, B4p double, B5p double,B1q double, B2q double, B3q double, B4q double, B5q double)"

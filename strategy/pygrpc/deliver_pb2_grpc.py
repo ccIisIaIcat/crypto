@@ -4,7 +4,6 @@ import grpc
 
 from . import deliver_pb2 as deliver__pb2
 
-
 class CustomDataReceiverStub(object):
     """定义小时bar消息接收对象
     """

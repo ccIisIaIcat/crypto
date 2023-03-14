@@ -3,9 +3,8 @@ module local_record_depth_5
 go 1.19
 
 require (
-	global v0.0.0-00010101000000-000000000000
+	global v0.0.1
 	query_depth v0.0.1
-	query_insid v0.0.0-00010101000000-000000000000
 	record_mysql v0.0.1
 )
 

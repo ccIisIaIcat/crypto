@@ -17,10 +17,11 @@ type Bar_deliver struct {
 	InsList   []string
 	query_bar query_bar_custom.QueryBar
 	Signal    bool
+	Simulate  bool
 }
 
-func DeliverBar(Ins_list []string, Port string, Custom_type string) int {
-	bd := genBarDeliver(Ins_list, Port, Custom_type)
+func DeliverBar(Ins_list []string, Port string, Custom_type string, Simulate bool) int {
+	bd := genBarDeliver(Ins_list, Port, Custom_type, Simulate)
 	go bd.query_bar.Start()
 	time.Sleep(time.Second)
 	go bd.startbarcustom(Port)
@@ -31,9 +32,10 @@ func DeliverBar(Ins_list []string, Port string, Custom_type string) int {
 	return 1
 }
 
-func genBarDeliver(Ins_list []string, Port string, Custom_type string) *Bar_deliver {
+func genBarDeliver(Ins_list []string, Port string, Custom_type string, simulate bool) *Bar_deliver {
 	bd := &Bar_deliver{}
-	bd.query_bar = query_bar_custom.QueryBar{InsId_list: Ins_list, Custom_type: Custom_type}
+	bd.Simulate = simulate
+	bd.query_bar = query_bar_custom.QueryBar{InsId_list: Ins_list, Custom_type: Custom_type, Simulate: simulate}
 	bd.Signal = false
 	return bd
 }

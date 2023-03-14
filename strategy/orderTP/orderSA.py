@@ -53,6 +53,7 @@ sim_buy.side = "buy"
 sim_buy.ordType = "market"
 sim_buy.sz = "1"
 sim_buy.clOrdId = ""
+sim_buy.cancelOrder = ""
 # 买空
 sim_sell = ToolUtil.ordertemplate()
 sim_sell.insId = "ETH-USDT-SWAP"
@@ -62,4 +63,32 @@ sim_sell.side = "sell"
 sim_sell.ordType = "market"
 sim_sell.sz = "1"
 sim_sell.clOrdId = ""
+sim_sell.cancelOrder = ""
+
+
+# net模式限价单
+# 买多
+sim_buy_limit = ToolUtil.ordertemplate()
+sim_buy_limit.insId = "ETH-USDT-SWAP"
+sim_buy_limit.posSide = "net"
+sim_buy_limit.tdMode = "cross"
+sim_buy_limit.side = "buy"
+sim_buy_limit.ordType = "limit"
+sim_buy_limit.sz = "1"
+sim_buy_limit.clOrdId = ""
+# 买空
+sim_sell_limit = ToolUtil.ordertemplate()
+sim_sell_limit.insId = "ETH-USDT-SWAP"
+sim_sell_limit.posSide = "net"
+sim_sell_limit.tdMode = "cross"
+sim_sell_limit.side = "sell"
+sim_sell_limit.ordType = "limit"
+sim_sell_limit.sz = "1"
+sim_sell_limit.clOrdId = ""
+# 撤单
+cancel_order = ToolUtil.ordertemplate()
+cancel_order.insId = "ETH-USDT-SWAP"
+cancel_order.clOrdId = ""
+cancel_order.cancelOrder = "cancel"
+
 

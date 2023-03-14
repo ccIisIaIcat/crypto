@@ -55,7 +55,7 @@ func (I *InfoDeliver) Start() {
 				fmt.Println("-----------------------------------------")
 				strategy_name, sub_info := I.DealRequest(temp)
 				I.pingpong_map[strategy_name] = make(chan bool, 10)
-				I.strategy_map[strategy_name] = deliver_server.GenStrategyUnit(strategy_name, I.time_out, *sub_info, I.pingpong_map[strategy_name])
+				I.strategy_map[strategy_name] = deliver_server.GenStrategyUnit(strategy_name, I.time_out, *sub_info, I.pingpong_map[strategy_name], I.simulate)
 				go func() {
 					I.strategy_map[strategy_name].Start()
 					delete(I.strategy_map, strategy_name)
@@ -86,6 +86,8 @@ func (I *InfoDeliver) OrderResDeliver() {
 		case res := <-I.orderserver.Res_chan:
 			var temp map[string]interface{}
 			json.Unmarshal([]byte(res), &temp)
+			fmt.Println("////")
+			fmt.Println(temp)
 			if temp["code"].(string) != "0" {
 				order_name := temp["data"].([]interface{})[0].(map[string]interface{})["clOrdId"].(string)
 				strategy_name := strings.Split(order_name, "0")[0]
@@ -139,6 +141,6 @@ func (I *InfoDeliver) DealRequest(new_request *deliver.LocalSubmit) (string, *gl
 
 func main() {
 	config := global.GetConfig("../../conf/conf.ini")
-	ifd := GenInfoDeliver("6101", "6102", config.UserInfo["Simulate"], true, 5)
+	ifd := GenInfoDeliver("6101", "6102", config.UserInfo["1"], false, 5)
 	ifd.Start()
 }

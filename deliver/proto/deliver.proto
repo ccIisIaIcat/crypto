@@ -80,6 +80,7 @@ message Order{
     string slTriggerPxType = 19; // 止损触发价类型 last：最新价格 index：指数价格 mark：标记价格 默认为last
     string quickMgnType = 20; // 一键借币类型，仅适用于杠杆逐仓的一键借币模式：manual：手动，auto_borrow： 自动借币，auto_repay： 自动还币
     string brokerID =21; // 自定义字段，用于标记下单策略对象的ID
+    string cancelOrder = 22; // 自定义字段。用于确定 是否撤单
 }
 
 // 定义小时bar消息接收对象

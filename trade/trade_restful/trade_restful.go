@@ -69,6 +69,34 @@ func (T *TradeRestful) SendOrder(body string) string {
 	return string(body2)
 }
 
+func (T *TradeRestful) CancelOrder(body string) string {
+	reqest, err := http.NewRequest("POST", T.baseurl+"/api/v5/trade/cancel-order", strings.NewReader(body))
+	if err != nil {
+		log.Println("请求错误")
+		panic(err)
+	}
+	ts, sign := T.GenSign("POST", "/api/v5/trade/cancel-order", body)
+	// OK-ACCESS-KEY
+	reqest.Header.Add("OK-ACCESS-KEY", T.userconf.Apikey)
+	reqest.Header.Add("OK-ACCESS-PASSPHRASE", T.userconf.Passphrase)
+	reqest.Header.Add("OK-ACCESS-SIGN", sign)
+	reqest.Header.Add("OK-ACCESS-TIMESTAMP", ts)
+	reqest.Header.Add("content-type", "application/json")
+
+	resp, err := T.client.Do(reqest)
+	if err != nil {
+		log.Println("发送错误")
+		panic(err)
+	}
+	defer resp.Body.Close()
+	body2, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println("解析错误")
+		panic(err)
+	}
+	return string(body2)
+}
+
 func (T *TradeRestful) ChangeLeverage(InsId string, leverage string, mgnMode string) string {
 	temp_body := `{"instId":"` + InsId + `","lever":"` + leverage + `","mgnMode":"` + mgnMode + `"}`
 	reqest, err := http.NewRequest("POST", T.baseurl+"/api/v5/account/set-leverage", strings.NewReader(temp_body))

@@ -39,13 +39,28 @@ func (O *OrderServer) sendOrder() {
 	for {
 		select {
 		case temp_order := <-O.order_chan:
-			format_order := genorder(temp_order)
-			if O.simulate {
-				res := O.trade_server_simulate.SendOrder(format_order)
-				O.Res_chan <- res
+			// ordid := temp_order.ClOrdId
+			fmt.Println(temp_order)
+			trade_cancel, format_order := genorder(temp_order)
+			// fmt.Println("///////////////////////////////////////////////")
+			// fmt.Println(trade_cancel)
+			// fmt.Println(format_order)
+			if trade_cancel {
+				if O.simulate {
+					res := O.trade_server_simulate.SendOrder(format_order)
+					O.Res_chan <- res
+				} else {
+					res := O.trade_server.SendOrder(format_order)
+					O.Res_chan <- res
+				}
 			} else {
-				res := O.trade_server.SendOrder(format_order)
-				O.Res_chan <- res
+				if O.simulate {
+					res := O.trade_server_simulate.CancelOrder(format_order)
+					O.Res_chan <- res
+				} else {
+					res := O.trade_server.CancelOrder(format_order)
+					O.Res_chan <- res
+				}
 			}
 		case <-time.After(time.Millisecond * 50):
 		}
@@ -84,26 +99,33 @@ func (O *OrderServer) OrderServerListen(port string, userconf global.ConfigUser,
 
 }
 
-func genorder(od *deliver.Order) string {
+// 第一个参数为是否为下单（否则为撤单），第二个参数为对应的报单字符串
+func genorder(od *deliver.Order) (bool, string) {
 	fmt.Println(od)
 	answer := `{"instId":"` + od.InsId + `"`
-	// temp_list := []string{"insId", "tdMode", "ccy", "clOrdId", "tag", "side", "posSide", "ordType", "sz", "px", "reduceOnly", "tgtCcy", "banAmend", "tpTriggerPx", "tpOrdPx", "slTriggerPx", "slOrdPx", "tpTriggerPxType", "slTriggerPxType", "quickMgnType", "brokerID"}
-	hofvalue := reflect.ValueOf(*od)
-	tp := reflect.TypeOf(*od)
-	for i := 0; i < tp.NumField(); i++ {
-		temp_name := strings.ToLower(string(tp.Field(i).Name[0])) + string(tp.Field(i).Name[1:])
-		if tp.Field(i).Name == "brokerID" {
-			continue
-		} else if tp.Field(i).Name == "reduceOnly" || tp.Field(i).Name == "banAmend" {
-			answer += `,"` + tp.Field(i).Name + `":` + hofvalue.Field(i).Interface().(string) + ``
-			continue
-		} else if temp_name == "tdMode" || temp_name == "ccy" || temp_name == "clOrdId" || temp_name == "tag" || temp_name == "side" || temp_name == "posSide" || temp_name == "ordType" || temp_name == "sz" || temp_name == "px" || temp_name == "tgtCcy" || temp_name == "tpTriggerPx" || temp_name == "tpOrdPx" || temp_name == "slTriggerPx" || temp_name == "slOrdPx" || temp_name == "tpTriggerPxType" || temp_name == "slTriggerPxType" || temp_name == "quickMgnType" {
-			if hofvalue.Field(i).Interface().(string) != "" {
-				answer += `,"` + temp_name + `":"` + hofvalue.Field(i).Interface().(string) + `"`
+	if od.CancelOrder == "" {
+		// temp_list := []string{"insId", "tdMode", "ccy", "clOrdId", "tag", "side", "posSide", "ordType", "sz", "px", "reduceOnly", "tgtCcy", "banAmend", "tpTriggerPx", "tpOrdPx", "slTriggerPx", "slOrdPx", "tpTriggerPxType", "slTriggerPxType", "quickMgnType", "brokerID"}
+		hofvalue := reflect.ValueOf(*od)
+		tp := reflect.TypeOf(*od)
+		for i := 0; i < tp.NumField(); i++ {
+			temp_name := strings.ToLower(string(tp.Field(i).Name[0])) + string(tp.Field(i).Name[1:])
+			if tp.Field(i).Name == "brokerID" {
+				continue
+			} else if tp.Field(i).Name == "reduceOnly" || tp.Field(i).Name == "banAmend" {
+				answer += `,"` + tp.Field(i).Name + `":` + hofvalue.Field(i).Interface().(string) + ``
+				continue
+			} else if temp_name == "tdMode" || temp_name == "ccy" || temp_name == "clOrdId" || temp_name == "tag" || temp_name == "side" || temp_name == "posSide" || temp_name == "ordType" || temp_name == "sz" || temp_name == "px" || temp_name == "tgtCcy" || temp_name == "tpTriggerPx" || temp_name == "tpOrdPx" || temp_name == "slTriggerPx" || temp_name == "slOrdPx" || temp_name == "tpTriggerPxType" || temp_name == "slTriggerPxType" || temp_name == "quickMgnType" {
+				if hofvalue.Field(i).Interface().(string) != "" {
+					answer += `,"` + temp_name + `":"` + hofvalue.Field(i).Interface().(string) + `"`
+				}
 			}
 		}
+		answer += `}`
+		fmt.Println(answer)
+		return true, answer
+	} else {
+		answer += "," + `"clOrdId":"` + od.ClOrdId + `"` + `}`
+		return false, answer
 	}
-	answer += `}`
-	fmt.Println(answer)
-	return answer
+
 }

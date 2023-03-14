@@ -13,15 +13,13 @@ from tool import ToolUtil as TU
 
 class strategy:
     # 策略固定参数
-    StrategyName = "sA" # 策略名称，用于标注订单
+    StrategyName = "demo" # 策略名称，用于标注订单
     OrderNumber = [0] # 累加订单id，每次发送订单时OrderNumber+1
     # 持仓信息（简化起见当前策略只有一笔持仓）
-    position_record = [] # 仓位更改建议在UpdateAccount模块进行，该demo模块只记载持仓数
-    position = {}
-    order_record = {} # 未回执报单记录，只有当报单个数为0时，将trade_forbidden_signal标记为False
     trade_forbidden_signal = True # 禁止交易信号
     # 已提交订单信息
     order_submit = []
+    order_deal_submit = []
     
     def __init__(self,conf:TU.config):
         self.StrategyName = conf.strategyname
@@ -36,26 +34,28 @@ class strategy:
     def LoadData(self):
         pass
     
-    def Makeorder(self,order_info:TU.ordertemplate,TradeInBar:bool,Position:TU.position):
-        """回测信号分为两种,一种是立即成交信号,发送后立即转换为对应仓位,一种是挂单信号,等待在之后的bar内成交"""
+    def Makeorder(self,order_info:TU.ordertemplate,order_deal:bool):
+        """回测信号分为两种,一种是立即成交信号,一种是挂单信号,成交信号做标记,等待在之后的bar内成交"""
         order_info.clOrdId = self.StrategyName + TU.UpdateOrderId(self.OrderNumber)
-        if TradeInBar:
-            self._tradeInBar(order_info)
+        if order_deal:
+            self.order_deal_submit.append(order_info)
         else:
-            self._tradeAfterBar(order_info)
+            self.order_submit.append(order_info)
         return "order placed"
     
-    def _tradeInBar(self,order_info:TU.ordertemplate,position:TU.position):
-        
-        pass
-    
-    def _tradeAfterBar(self,order_info:TU.ordertemplate):
-        self.order_submit.append
-        pass
-    
-    def Process_order(self,barinfo:TU.barinfo):
-        """放置在类内对应函数中用于处理订单"""
-        pass
-    
+    def Pre_process(self,bar_info:TU.barinfo,Position:TU.position):
+        # 处理deal订单，把deal订单处理为仓位
+        for order_deal in self.order_deal_submit:
+            Position.UpdateBackwardOrder(order_deal,bar_info.Ts_open)
+        self.order_deal_submit = []
+        undeal_list = []
+        for order_undeal in self.order_submit:
+            if order_undeal.BarInfoOpenJudge(bar_info):
+                Position.UpdateBackwardOrder(order_deal,bar_info.Ts_open)
+            else:
+                undeal_list.append(order_undeal)
+        self.order_submit = undeal_list
+            
+
     def Start(self):
         self.LoadData()

@@ -39,15 +39,20 @@ class strategy(strategyBackward.strategy):
     stop_lose_ratio = 0.03 # 止损比例
     bolling_std_k = 2 # 布林带方差个数
     
+    signal_df = pd.DataFrame(columns=["record_time","MA","Signal"])
+    
     def __init__(self,conf:TU.config):
         super().__init__(conf)
     # 声明存储对象
     tick_list = TU.TickinfoArray(Insid="ETH-USDT-SWAP",max_length=10)
     bar_list = TU.BarinfoArray(Insid="ETH-USDT-SWAP")
     bar_hour_list = TU.BarinfoArray(Insid="ETH-USDT-SWAP")
+    # 声明仓位对象
+    ETH_USDT_position = TU.position(Insid="ETH-USDT-SWAP")
+    
     
     def UpdateBarCustom(self,bar_info):
-        self.Process_order()
+        self.Pre_process(bar_info=TU.barinfo(bar_info))
         
         # 更新本地bar列表
         self.bar_list.Store(bar_info)
@@ -76,6 +81,8 @@ class strategy(strategyBackward.strategy):
             # 当产生MA梯度平均时，计算信号指标
             self.basic_signal.append(abs(self.MA_grad_mean[-1]-self.MA_grad[-1]))
             print(self.basic_signal[-1])
+            self.signal_df.loc[len(self.signal_df)] = [self.bar_hour_list.GetTsByTail(1)[0],self.MA_hour[-1],self.basic_signal[-1]]
+            self.signal_df.to_csv("./signal.csv")
 
         # 当basic信号存在且大于阈值时考虑bar交易
         if len(self.basic_signal) > 0 and self.basic_signal[-1]>=self.basic_signal_threshold:
@@ -84,39 +91,27 @@ class strategy(strategyBackward.strategy):
                 # 当当前bar的close大于上bolling up时，做多
                 if self.bar_hour_list.GetClosePriceByTail(1)[0] > self.bolling_up[-1]:
                     # 如果没有仓位，开仓
-                    if len(self.position_record) == 0:
+                    if not self.ETH_USDT_position.judge:
                         odt_long.sz = "1"
-                        odt_long.slTriggerPx = str(self.bar_hour_list.GetClosePriceByTail(1)[0]*(1-self.stop_lose_ratio))
-                        odt_long.slOrdPx = "-1"
-                        odt_long.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_long)
                         self.order_record[odt_long.clOrdId] = 1
-                    elif self.position_record[0]["posSide"] == "short":
+                    elif self.ETH_USDT_position.posSide == "short":
                         odt_long.sz = "2"
-                        odt_long.slTriggerPx = str(self.bar_hour_list.GetClosePriceByTail(1)[0]*(1-self.stop_lose_ratio))
-                        odt_long.slOrdPx = "-1"
-                        odt_long.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_long)
                         self.order_record[odt_long.clOrdId] = 1
-                # 当当前bar的close小于bolling down时，做空
+            # 当当前bar的close小于bolling down时，做空
                 if self.bar_hour_list.GetClosePriceByTail(1)[0] < self.bolling_down[-1]:
                      # 如果没有仓位，开空
-                    if len(self.position_record) == 0:
+                    if not self.ETH_USDT_position.judge:
                         odt_short.sz = "1"
-                        odt_short.slTriggerPx = str(self.bar_hour_list.GetClosePriceByTail(1)[0]*(1+self.stop_lose_ratio))
-                        odt_short.slOrdPx = "-1"
-                        odt_short.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1
                     # 如果持有空仓，平多，开空
-                    elif self.position_record[0]["posSide"] == "long":
+                    elif self.ETH_USDT_position.posSide == "long":
                         odt_short.sz = "2"
-                        odt_short.slTriggerPx = str(self.bar_hour_list.GetClosePriceByTail(1)[0]*(1+self.stop_lose_ratio))
-                        odt_short.slOrdPx = "-1"
-                        odt_short.slTriggerPxType = "last"
                         self.trade_forbidden_signal = True
                         self.Makeorder(odt_short)
                         self.order_record[odt_short.clOrdId] = 1

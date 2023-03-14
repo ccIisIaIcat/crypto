@@ -29,11 +29,11 @@ func CheckByTime(end_time string, ins_type string) {
 	ts_start, ts_end := GenTs(end_time, 60*4)
 	check := &record_mysql_barcheck.BarCheck{}
 	if ins_type == "swap" {
-		check = record_mysql_barcheck.GenBarCheck(config.MysqlInfo["Local"], "crypto_swap")
+		check = record_mysql_barcheck.GenBarCheck(config.MysqlInfo["Local2"], "crypto_swap")
 	} else if ins_type == "spot" {
-		check = record_mysql_barcheck.GenBarCheck(config.MysqlInfo["Local"], "crypto_spot")
+		check = record_mysql_barcheck.GenBarCheck(config.MysqlInfo["Local2"], "crypto_spot")
 	} else if ins_type == "future_quarter" {
-		check = record_mysql_barcheck.GenBarCheck(config.MysqlInfo["Local"], "crypto_future_quarter")
+		check = record_mysql_barcheck.GenBarCheck(config.MysqlInfo["Local2"], "crypto_future_quarter")
 	}
 	for i := 0; i < len(check.Ins_list); i++ {
 		log.Println(check.Ins_list[i], " check!")

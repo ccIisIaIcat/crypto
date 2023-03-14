@@ -18,6 +18,7 @@ type Tick_deliver struct {
 	query_tick query_tick.QueryTick
 	port       string
 	Signal     bool
+	simulate   bool
 }
 
 func (T *Tick_deliver) DeliverTick() int {
@@ -32,10 +33,11 @@ func (T *Tick_deliver) DeliverTick() int {
 	return 1
 }
 
-func GenTickDeliver(Ins_list []string, Port string) *Tick_deliver {
+func GenTickDeliver(Ins_list []string, Port string, simulate bool) *Tick_deliver {
 	td := &Tick_deliver{}
 	td.port = Port
-	td.query_tick = query_tick.QueryTick{InsId_list: Ins_list}
+	td.simulate = simulate
+	td.query_tick = query_tick.QueryTick{InsId_list: Ins_list, Simulate: simulate}
 	td.Signal = false
 
 	return td

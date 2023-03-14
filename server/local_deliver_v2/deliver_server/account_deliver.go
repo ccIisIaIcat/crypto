@@ -8,6 +8,7 @@ import (
 	deliver "godeliver"
 	"io"
 	"log"
+
 	"os"
 	"strings"
 	"sync"
@@ -134,11 +135,14 @@ func (A *Account_deliver) deliverByStrategyName() {
 			}
 			A.lock.Unlock()
 		case info := <-A.ac.InfoChanOrders:
-			A.order_log.Println(string(info))
 			A.lock.Lock()
 			var temp_judge map[string]interface{}
 			json.Unmarshal(info, &temp_judge)
 			strateName := strings.Split(temp_judge["data"].([]interface{})[0].(map[string]interface{})["clOrdId"].(string), "0")[0]
+			// fmt.Println("lll")
+			// fmt.Println(temp_judge["data"].([]interface{})[0].(map[string]interface{})["clOrdId"].(string))
+			// fmt.Println(temp_judge["data"].([]interface{})[0].(map[string]interface{})["state"].(string))
+			// fmt.Println("kkk")
 			if _, ok := A.order_subsicribe[strateName]; ok {
 				A.account_info_chan[strateName] <- info
 			}

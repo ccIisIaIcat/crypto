@@ -32,11 +32,10 @@ func DeliverTick(Ins_list []string, Port string) int {
 	return 1
 }
 
-func genTickDeliver(Ins_list []string, Port string) *Tick_deliver {
+func genTickDeliver(Ins_list []string, Port string, simulate bool) *Tick_deliver {
 	td := &Tick_deliver{}
-	td.query_tick = query_tick.QueryTick{InsId_list: Ins_list}
+	td.query_tick = query_tick.QueryTick{InsId_list: Ins_list, Simulate: simulate}
 	td.Signal = false
-
 	return td
 }
 

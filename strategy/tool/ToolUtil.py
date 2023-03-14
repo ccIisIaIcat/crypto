@@ -12,67 +12,34 @@ sys.path.append(__dir__)
 sys.path.append(os.path.abspath(os.path.join(__dir__, '..')))
 from pygrpc import deliver_pb2
 
-class position:
-    judge:bool # 标记是否持仓(即持仓量是否为0)
-    Insid = ""  # 持仓id
-    pos = 0 # 持仓数量
-    posSide = "" # 持仓方向
-    avgPx = 0. # 平均价格
-    cTime = "" # 建仓时间
-    uTime = [] # 仓位更新时间列表
-    clOrdId_list = [] # 更新该仓位的订单名称 
-    def __init__(self,Insid:str):
-        self.Insid = Insid
-        self.judge = False
-    def _reset(self):
-        self.judge = False # 标记是否持仓(即持仓量是否为0)
-        self.pos = 0 # 持仓数量
-        self.posSide = "" # 持仓方向
-        self.avgPx = 0. # 平均价格
-        self.cTime = "" # 建仓时间
-        self.uTime = [] # 仓位更新时间列表
-        self.clOrdId_list = [] # 更新该仓位的订单名称 
-    def UpdatePosition(self,order_respon):
-        self.uTime.append(str(datetime.datetime.now()))
-        self.cTime = self.uTime[0]
-        self.clOrdId_list.append(order_respon["clOrdId"])
-        if order_respon["side"] == "buy":
-            if not self.judge:
-                self.posSide = "long"
-                self.avgPx = float(order_respon["avgPx"])
-                self.pos = float(order_respon["accFillSz"])
-            else:
-                if self.pos + float(order_respon["accFillSz"]) == 0:
-                    self._reset()
-                else:
-                    self.avgPx = (self.avgPx*self.pos + float(order_respon["avgPx"])*float(order_respon["accFillSz"]))/(float(order_respon["accFillSz"])+self.pos)
-                    self.pos += float(order_respon["accFillSz"])
-                    if self.pos > 0:
-                        self.posSide = "long"
-                    else:
-                        self.posSide = "short"
-        else:
-            if not self.judge:
-                self.posSide = "short"
-                self.avgPx = float(order_respon["avgPx"])
-                self.pos = -float(order_respon["accFillSz"])
-            else:
-                if self.pos - float(order_respon["accFillSz"]) == 0:
-                    self._reset()
-                else:
-                    self.avgPx = (self.avgPx*self.pos - float(order_respon["avgPx"])*float(order_respon["accFillSz"]))/(self.pos-float(order_respon["accFillSz"]))
-                    self.pos -= float(order_respon["accFillSz"])
-                    if self.pos > 0:
-                        self.posSide = "long"
-                    else:
-                        self.posSide = "short"
-        if self.pos != 0:
-            self.judge = True
-            
-    def GenInfo(self):
-        return [self.judge,self.Insid,self.pos,self.posSide,self.avgPx,self.cTime," ".join(self.uTime)," ".join(self.clOrdId_list)]
-    
-
+class barinfo:
+    Insid = ""
+    Ts_open = 0
+    Open_price = 0
+    High_price = 0
+    Low_price = 0
+    Close_price = 0
+    Vol = 0
+    VolCcy = 0
+    VolCcyQuote = 0
+    # Oi = 0
+    # OiCcy = 0
+    # Ts_oi = 0
+    # FundingRate = 0
+    # NextFundingRate = 0
+    # Ts_FundingRate = 0
+    # TS_NextFundingRate = 0
+    def __init__(self,bar_info=""):
+        if not isinstance(bar_info,Iterable):
+            self.Insid =  bar_info.Insid 
+            self.Ts_open = bar_info.Ts_open
+            self.Open_price = bar_info.Open_price
+            self.High_price = bar_info.High_price
+            self.Low_price = bar_info.Low_price
+            self.Close_price = bar_info.Close_price
+            self.Vol = bar_info.Vol
+            self.VolCcy = bar_info.VolCcy
+            self.VolCcyQuote = bar_info.VolCcyQuote
 
 class ordertemplate:
     insId = ""
@@ -96,6 +63,7 @@ class ordertemplate:
     slTriggerPxType = ""
     quickMgnType = ""
     brokerID = ""
+    cancelOrder = ""
     def genOrder(self):
         temp = deliver_pb2.Order()
         if self.insId != "":
@@ -146,9 +114,119 @@ class ordertemplate:
             temp.quickMgnType = self.quickMgnType
         if self.brokerID != "":
             temp.brokerID = self.brokerID
+        if self.cancelOrder != "":
+            temp.cancelOrder = self.cancelOrder
         return temp
     def genInfoSimple(self):
-        return [self.insId,self.tdMode,self.ccy,self.tdMode,self.clOrdId,self.side,self.posSide,self.ordType,self.sz,self.px]
+        if self.cancelOrder == "":
+            return [self.insId,self.tdMode,self.ccy,self.tdMode,self.clOrdId,self.side,self.posSide,self.ordType,self.sz,self.px]
+        else:
+            return [self.insId,self.clOrdId,"cancel"]
+    def BarInfoOpenJudge(self,bar_info:barinfo):
+        if self.cancelOrder == "":
+            if float(self.px) < float(bar_info.High_price) and float(self.px) > float(bar_info.High_price):
+                return True
+            else:
+                return False
+        
+
+class position:
+    judge:bool # 标记是否持仓(即持仓量是否为0)
+    Insid = ""  # 持仓id
+    pos = 0 # 持仓数量
+    posSide = "" # 持仓方向
+    avgPx = 0. # 平均价格
+    cTime = "" # 建仓时间
+    uTime = [] # 仓位更新时间列表
+    clOrdId_list = [] # 更新该仓位的订单名称 
+    def __init__(self,Insid:str):
+        self.Insid = Insid
+        self.judge = False
+    def _reset(self):
+        self.judge = False # 标记是否持仓(即持仓量是否为0)
+        self.pos = 0 # 持仓数量
+        self.posSide = "" # 持仓方向
+        self.avgPx = 0. # 平均价格
+        self.cTime = "" # 建仓时间
+        self.uTime = [] # 仓位更新时间列表
+        self.clOrdId_list = [] # 更新该仓位的订单名称 
+    def UpdateBackwardOrder(self,orderinfo:ordertemplate,time:str):
+        self.uTime.append(time)
+        self.cTime = self.uTime[0]
+        self.clOrdId_list.append(orderinfo.clOrdId)
+        if orderinfo.side == "buy":
+            if not self.judge:
+                self.posSide = "long"
+                self.avgPx = float(orderinfo.px)
+                self.pos =  float(orderinfo.sz)
+            else:
+                if self.pos + float(float(orderinfo.sz)) == 0:
+                    self._reset()
+                else:
+                    self.avgPx = (self.avgPx*self.pos + float(orderinfo.px)*float(orderinfo.sz))/(float(orderinfo.sz)+self.pos)
+                    self.pos += float(orderinfo.sz)
+                    if self.pos > 0:
+                        self.posSide = "long"
+                    else:
+                        self.posSide = "short"
+        else:
+            if not self.judge:
+                self.posSide = "short"
+                self.avgPx = float(orderinfo.px)
+                self.pos = -float(orderinfo.sz)
+            else:
+                if self.pos - float(orderinfo.sz) == 0:
+                    self._reset()
+                else:
+                    self.avgPx = (self.avgPx*self.pos - float(orderinfo.px)*float(orderinfo.sz))/(self.pos-float(orderinfo.sz))
+                    self.pos -= float(orderinfo.sz)
+                    if self.pos > 0:
+                        self.posSide = "long"
+                    else:
+                        self.posSide = "short"
+        if self.pos != 0:
+            self.judge = True
+    def UpdatePosition(self,order_respon):
+        self.uTime.append(str(datetime.datetime.now()))
+        self.cTime = self.uTime[0]
+        self.clOrdId_list.append(order_respon["clOrdId"])
+        if order_respon["side"] == "buy":
+            if not self.judge:
+                self.posSide = "long"
+                self.avgPx = float(order_respon["avgPx"])
+                self.pos = float(order_respon["accFillSz"])
+            else:
+                if self.pos + float(order_respon["accFillSz"]) == 0:
+                    self._reset()
+                else:
+                    self.avgPx = (self.avgPx*self.pos + float(order_respon["avgPx"])*float(order_respon["accFillSz"]))/(float(order_respon["accFillSz"])+self.pos)
+                    self.pos += float(order_respon["accFillSz"])
+                    if self.pos > 0:
+                        self.posSide = "long"
+                    else:
+                        self.posSide = "short"
+        else:
+            if not self.judge:
+                self.posSide = "short"
+                self.avgPx = float(order_respon["avgPx"])
+                self.pos = -float(order_respon["accFillSz"])
+            else:
+                if self.pos - float(order_respon["accFillSz"]) == 0:
+                    self._reset()
+                else:
+                    self.avgPx = (self.avgPx*self.pos - float(order_respon["avgPx"])*float(order_respon["accFillSz"]))/(self.pos-float(order_respon["accFillSz"]))
+                    self.pos -= float(order_respon["accFillSz"])
+                    if self.pos > 0:
+                        self.posSide = "long"
+                    else:
+                        self.posSide = "short"
+        if self.pos != 0:
+            self.judge = True
+            
+    def GenInfo(self):
+        return [self.judge,self.Insid,self.pos,self.posSide,self.avgPx,self.cTime," ".join(self.uTime)," ".join(self.clOrdId_list)]
+    
+
 
 class config:
     strategyname = ""
@@ -166,34 +244,7 @@ class config:
     def genLocalSubmit(self):
         return deliver_pb2.LocalSubmit(subtype=self.subtype,barcustom=self.barcustom,tickInsid=self.tickInsid,barInsid=self.barInsid,tickPort=self.tickPort,barPort=self.barPort,accountPort=self.accountPort,strategyname=self.strategyname,initjson=self.initjson)
     
-class barinfo:
-    Insid = ""
-    Ts_open = 0
-    Open_price = 0
-    High_price = 0
-    Low_price = 0
-    Close_price = 0
-    Vol = 0
-    VolCcy = 0
-    VolCcyQuote = 0
-    # Oi = 0
-    # OiCcy = 0
-    # Ts_oi = 0
-    # FundingRate = 0
-    # NextFundingRate = 0
-    # Ts_FundingRate = 0
-    # TS_NextFundingRate = 0
-    def __init__(self,bar_info=""):
-        if not isinstance(bar_info,Iterable):
-            self.Insid =  bar_info.Insid 
-            self.Ts_open = bar_info.Ts_open
-            self.Open_price = bar_info.Open_price
-            self.High_price = bar_info.High_price
-            self.Low_price = bar_info.Low_price
-            self.Close_price = bar_info.Close_price
-            self.Vol = bar_info.Vol
-            self.VolCcy = bar_info.VolCcy
-            self.VolCcyQuote = bar_info.VolCcyQuote
+
 
 class tickinfo:
     Insid = ""
@@ -265,7 +316,7 @@ class BarinfoArray():
     def GetTsByTail(self,limit:int):
         if limit > len(self.df):
             limit = len(self.df)
-        return np.array(self.df["Ts_open"].tail(limit)).astype("int")
+        return np.array(self.df["Ts_open"].tail(limit)).astype("int64")
     def GetOpenPriceByTail(self,limit:int):
         if limit > len(self.df):
             limit = len(self.df)
@@ -329,7 +380,7 @@ class TickinfoArray():
     def GetTsByTail(self,limit:int):
         if limit > len(self.df):
             limit = len(self.df)
-        return np.array(self.df["Ts_Price"].tail(limit)).astype("int")
+        return np.array(self.df["Ts_Price"].tail(limit)).astype("int64")
     def GetAsk1PriceByTail(self,limit:int):
         if limit > len(self.df):
             limit = len(self.df)
@@ -366,6 +417,35 @@ def genhourbarCustom(strategy,bardf:BarinfoArray,end_min:str):
             tempbar.VolCcy = bardf.df["VolCcy"][-length:].sum()
             tempbar.VolCcyQuote = bardf.df["VolCcyQuote"][-length:].sum()
             strategy.GenHourBarCustom(tempbar)
+            
+def gendaybarCustom(strategy,bardf:BarinfoArray):
+    """调用该方法时,策略必须声明GenDayBarCustom方法"""
+    last_series = bardf.df.iloc[-1]
+    length = 60*24
+    if time.localtime(float(last_series["Ts_open"])/1000).tm_min == 0 and time.localtime(float(last_series["Ts_open"])/1000).tm_hour == 0:
+        if len(bardf.df) >= length:
+            tempbar = barinfo()
+            tempbar.Insid = last_series["Insid"]
+            tempbar.Ts_open = list(bardf.df["Ts_open"][-length:])[0]
+            tempbar.Open_price = list(bardf.df["Open_price"][-length:])[0]
+            tempbar.High_price = bardf.df["High_price"][-length:].max()
+            tempbar.Low_price = bardf.df["Low_price"][-length:].min()
+            tempbar.Close_price = list(bardf.df["Close_price"][-length:])[-1]
+            strategy.GenDayBarCustom(tempbar)
+            
+def genCustomBar(strategy,bardf:BarinfoArray,length:int,start:int):
+    
+    if (bardf.GetTsByTail(1)[0]/1000)%(length*60) == start:
+        if bardf.Getlength() >= length:
+            tempbar = barinfo()
+            tempbar.Insid = bardf.GetInsid()
+            tempbar.Ts_open = bardf.GetTsByTail(length)[0]
+            tempbar.Open_price = bardf.GetOpenPriceByTail(length)[0]
+            tempbar.High_price = bardf.GetHighPriceByTail(length).max()
+            tempbar.Low_price = bardf.GetLowPriceByTail(length).min()
+            tempbar.Close_price = bardf.GetClosePriceByTail(1)[0]
+            strategy.GenCustomBar()
+    
             
 # 调用该方法时，策略必须声明GenHourBarCustom方法和hour_bar_calculation对象
 def genhourbarCustomQuick(strategy,bardf:BarinfoArray,end_min:str):
@@ -414,6 +494,7 @@ def Load1MBarFromLocalMysql(strategy,user,password,database,Insid,length=0):
     info_matrix = info_matrix[-length:]
     for i in range(length):
         strategy.UpdateBarCustom(info_matrix[i])
+        
 
 # 调用此方法的strategy必须包含UpdateBarCustom方法
 def Load1MBarFromCsv(strategy,path,length=0):
